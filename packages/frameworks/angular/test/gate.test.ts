@@ -343,14 +343,33 @@ describe('Angular dossier gate', () => {
 	 *   meaning, and Vue and Svelte carry the SAME form. That is an architecture
 	 *   ruling, not a floor.
 	 *
-	 * AND ONE MORE BLINDNESS, MEASURED AND RECORDED HERE BECAUSE IT WOULD BE
-	 * INVISIBLE IN THE GREEN ABOVE: `parseEmitted` in this gate keeps the LAST
-	 * `@Component` class it walks. `C1-slot.ts` declares TWO - `Frame` then
-	 * `SlotPage` - so `Frame` is never parsed and its own `<ng-content />` is
-	 * never observed. That is why this file reports ZERO uninventoried forms while
-	 * `M1-panel.ts` reports `Content` for the same construct. `C1-slot.ts` is the
-	 * only multi-component emitted file in this package, so `generated/` is
-	 * unaffected - the row below pins that fact so it stays true.
+	 * THE BLINDNESS T015 RECORDED HERE IS FIXED, AND THIS PIN WENT FROM TWO TO
+	 * THREE BECAUSE OF IT. `parseEmitted` used to keep the LAST `@Component` class
+	 * it walked, so `C1-slot.ts` - which declares `Frame` then `SlotPage` - was
+	 * inspected only at `SlotPage`, and `Frame`'s own `<ng-content />` was never
+	 * observed. T015 predicted this was the origin of T009's phantom FIFTH
+	 * violation; T018 fixed `parseEmitted` to collect EVERY component, and
+	 * `C1-slot.ts` now reports `template-node:Content` at line 7. THE PHANTOM WAS
+	 * REAL AND IT IS NOW COUNTED.
+	 *
+	 * READ THE DELTA CORRECTLY - NO GREEN GATE TURNED RED. Measured with the HEAD
+	 * gate and with the fixed gate, side by side:
+	 *
+	 * - `generated/`, the STANDING corpus: 15 files, 0 violations BEFORE and 0
+	 *   AFTER. Unmoved.
+	 * - `generated-composition/`, which is NOT in the standing corpus and was
+	 *   ALREADY RED: 2 violations BEFORE, 3 AFTER.
+	 *
+	 * NOTHING WAS ADMITTED TO `BASELINE_FORM_INVENTORY` TO ABSORB THE THIRD ONE.
+	 * `Content` is still uninventoried, the inventory still has its 32 entries and
+	 * `ANGULAR_BASELINE_FLOOR` is unmoved. The pin got BIGGER, which is the only
+	 * honest direction for a better instrument, and T017 - which owns the
+	 * `template-node:Content` / `ng-content`-must-reject joint ruling - now has TWO
+	 * files to move rather than one.
+	 *
+	 * `C1-slot.ts` is still the only multi-component emitted file in this package,
+	 * which is why `generated/` could not be affected; the last assertion in this
+	 * row pins that so it stays true.
 	 */
 	test('DEBT PIN: generated-composition/ is discovered, gated by hand, and STILL DRAWS violations', async () => {
 		const expected = compositionFixtures
@@ -376,26 +395,37 @@ describe('Angular dossier gate', () => {
 			result.violations.map((entry) => ({ file: entry.file, policy: entry.policy })),
 			JSON.stringify(result.violations, null, 2),
 		).toEqual([
+			{ file: 'generated-composition/C1-slot.ts', policy: 'baseline-form-inventory' },
 			{ file: 'generated-composition/M1-panel.ts', policy: 'baseline-form-inventory' },
 			{ file: 'generated-composition/M2-page.ts', policy: 'baseline-form-inventory' },
 		]);
-		// The FORMS, not just the count - a count is satisfied by any two
-		// violations, including two the emitter never used to produce.
+		// The FORMS, not just the count - a count is satisfied by any three
+		// violations, including three the emitter never used to produce.
 		expect(result.violations[0]!.message).toContain('template-node form "Content"');
-		expect(result.violations[1]!.message).toContain('import form "./M1-panel#Panel"');
+		expect(result.violations[1]!.message).toContain('template-node form "Content"');
+		expect(result.violations[2]!.message).toContain('import form "./M1-panel#Panel"');
+		// AND THE LINE, for the one that only became visible in T018: `C1-slot.ts`
+		// line 7 is inside `Frame`, the FIRST of the file's two components - the
+		// component the old `parseEmitted` threw away. A file-level assertion alone
+		// would not distinguish "Frame is parsed" from "SlotPage grew an ng-content".
+		expect(result.violations[0]!.line).toBe(7);
 		// THE CONTRADICTION, ASSERTED RATHER THAN DESCRIBED. The construct the
-		// mutation row below plants as a REJECTED form is the construct this
-		// committed artifact SHIPS. Whichever way that is resolved, both sites move
-		// together, and this line is what makes the second one impossible to miss.
+		// mutation row below plants as a REJECTED form is the construct these
+		// committed artifacts SHIP - now TWO of them. Whichever way T017 resolves
+		// it, all the sites move together, and these lines make them impossible to
+		// miss.
 		expect(
 			await readFile(resolve(packageRoot, 'generated-composition/M1-panel.ts'), 'utf8'),
 		).toContain('<ng-content />');
-		// THE ANTI-VACUITY HALF. `C1-slot.ts` is clean, and it is clean for TWO
-		// independent reasons that must not be allowed to collapse into one: the
-		// `imports` form T014 admitted is genuinely inventoried now, and `Frame`'s
-		// `<ng-content />` is genuinely NOT SEEN. Assert both, so a future
-		// `parseEmitted` that starts walking every component turns this red rather
-		// than silently widening what the lane claims to inspect.
+		// THE ANTI-VACUITY HALF, REWRITTEN FOR THE FIXED PARSER. T015 asserted here
+		// that `Frame`'s `<ng-content />` was NOT seen, precisely so that a
+		// `parseEmitted` which started walking every component would turn this row
+		// red rather than silently widening what the lane claims to inspect. IT DID
+		// TURN RED, and this is the re-taken decision: the form is now seen, and
+		// `C1-slot.ts` is asserted to carry BOTH of its forms - the `imports` metadata
+		// T014 admitted, which stays clean, and the `Content` node, which does not.
+		// Keeping the `imports` half is what stops "this file draws a violation"
+		// collapsing into "this file is rejected wholesale".
 		const slotPage = await readFile(
 			resolve(packageRoot, 'generated-composition/C1-slot.ts'),
 			'utf8',
@@ -406,18 +436,96 @@ describe('Angular dossier gate', () => {
 			kind: 'component-metadata',
 			form: 'imports',
 		});
-		expect(collectEmittedForms(slotPage)).not.toContainEqual({
+		expect(collectEmittedForms(slotPage)).toContainEqual({
 			kind: 'template-node',
 			form: 'Content',
 		});
 		// And `generated/` really is single-component throughout, which is what
-		// confines the blindness above to this directory.
+		// confined the blindness to this directory while it lasted, and is why the
+		// fix could not move a byte or a verdict there. STILL TRUE at T018.
 		for (const file of scenarioCorpus('ts'))
 			expect(
 				(await readFile(resolve(packageRoot, file), 'utf8')).match(/^@Component\(\{$/gm)
 					?.length ?? 0,
 				file,
 			).toBe(1);
+	});
+
+	/**
+	 * THE MUTATION THAT KILLS THE `parseEmitted` FIX - and it is the one mutation
+	 * the shipped corpus cannot supply, because every rejected form it contains
+	 * sits in a SINGLE-component file where the old parser saw it anyway.
+	 *
+	 * The defect was: `parseEmitted` overwrote its component binding on every
+	 * match, so a module declaring two components was inspected only at the LAST
+	 * one. Every component-scoped policy in this gate - inventory, whitespace,
+	 * two-way, changeDetection, getter purity, template-parse - silently skipped
+	 * everything before it. A gate that inspects half a file is indistinguishable
+	 * from a clean file, which is the whole reason this row exists.
+	 *
+	 * So: THREE rejected forms planted on the FIRST of two components, each
+	 * reaching the gate through a DIFFERENT scoped path - template nodes, decorator
+	 * metadata, and class members - so a partial fix that reconnected only one of
+	 * them is still red. Each is asserted with the LINE it was reported at, and
+	 * every line is proved to fall INSIDE the first component. A file-level "the
+	 * gate said something" would pass just as well if the second component had
+	 * grown the form instead; the line is what makes this attributable.
+	 *
+	 * THE CONTROL, and it is what stops this row degenerating into "the gate
+	 * rejects everything": the same three policies are asserted ABSENT from the
+	 * unmutated artifact, which draws exactly one violation - the `Content` form
+	 * T017 owns.
+	 */
+	test('MUTATION: a form on the FIRST of two components is rejected, not skipped', async () => {
+		const slot = await readFile(
+			resolve(packageRoot, 'generated-composition/C1-slot.ts'),
+			'utf8',
+		);
+		// The file really does declare two components, or this row measures nothing.
+		expect(slot.match(/^@Component\(\{$/gm)?.length ?? 0).toBe(2);
+		// THE CONTROL FIRST. Unmutated, this file draws exactly the one unruled form.
+		expect(await policiesFor('generated-composition/C1-slot.ts', slot)).toEqual([
+			'baseline-form-inventory',
+		]);
+
+		// 1. TEMPLATE-scoped: a two-way binding inside `Frame`'s template.
+		const twoWay = mutate(slot, '<section data-frame>', '<section data-frame [(value)]="x">');
+		// 2. METADATA-scoped: a changeDetection override on `Frame`'s decorator.
+		const changeDetection = mutate(
+			twoWay,
+			"selector: 'frameless-frame',",
+			"selector: 'frameless-frame',\n\tchangeDetection: 1,",
+		);
+		// 3. CLASS-MEMBER-scoped: an impure getter on the `Frame` class body.
+		const mutant = mutate(
+			changeDetection,
+			'class Frame {}',
+			'class Frame {\n\tseen: number[] = [];\n\tget bad() {\n\t\tthis.seen.push(1);\n\t\treturn 1;\n\t}\n}',
+		);
+
+		// The boundary is computed on the MUTANT, not on the original: two of the
+		// three plants insert lines ahead of the second decorator, so an ordinal read
+		// off the unmutated file would be off by three and the row would fail for a
+		// reason that has nothing to do with what it measures.
+		expect(mutant.match(/^@Component\(\{$/gm)?.length ?? 0).toBe(2);
+		const secondComponentLine =
+			mutant
+				.slice(0, mutant.indexOf('@Component({', mutant.indexOf('@Component({') + 1))
+				.split('\n').length;
+
+		const violations = await violationsFor('generated-composition/FirstComponentMutant.ts', mutant);
+		for (const policy of [
+			'no-two-way-binding',
+			'no-change-detection-override',
+			'getter-expression-purity',
+		]) {
+			const reported = violations.filter((entry) => entry.policy === policy);
+			expect(reported.length, `${policy}\n${JSON.stringify(violations, null, 2)}`).toBeGreaterThan(0);
+			for (const entry of reported)
+				expect(entry.line, `${policy} reported at ${String(entry.line)}`).toBeLessThan(
+					secondComponentLine,
+				);
+		}
 	});
 
 	/**

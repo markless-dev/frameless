@@ -412,11 +412,10 @@ function walkTemplate(nodes: unknown, visit: (node: Node) => void): void {
 // the two ASTs this gate reads
 // ---------------------------------------------------------------------------
 
-type Parsed = {
-	/** The emitted module's TypeScript AST. */
-	readonly module: Node;
-	/** The exported component class. */
-	readonly component: Node | null;
+/** One `@Component`-decorated class, with everything scoped to that class. */
+type ParsedComponent = {
+	/** The component class. */
+	readonly component: Node;
 	/** The `@Component({...})` metadata object. */
 	readonly metadata: Node | null;
 	/** The INLINE template text, exactly as `ng build` would read it. */
@@ -428,12 +427,35 @@ type Parsed = {
 	readonly templateErrors: readonly string[];
 };
 
+type Parsed = {
+	/** The emitted module's TypeScript AST. */
+	readonly module: Node;
+	/**
+	 * EVERY class carrying an `@Component` decorator, in source order.
+	 *
+	 * IT WAS A SINGLE `component: Node | null` UNTIL T018, and `parseEmitted`
+	 * OVERWROTE it on every match, so a module declaring more than one component
+	 * was inspected only at its LAST one. `generated-composition/C1-slot.ts`
+	 * declares `Frame` then `SlotPage`, so `Frame`'s metadata, class members and
+	 * whole TEMPLATE - including its `<ng-content />` - were invisible to every
+	 * component-scoped policy in this file: the inventory, whitespace, two-way,
+	 * changeDetection, getter-purity and template-parse checks all silently
+	 * skipped it. Measured in `frameless-app-axes-v1` notes T015 §5.1 and T018.
+	 *
+	 * The MODULE-scoped policies were never affected: `signalViolations`,
+	 * `outputViolations`, `stopPropagationViolations` and the import/decorator half
+	 * of `observeForms` walk `module` and always saw the whole file. That split is
+	 * why the defect could sit unnoticed - half the gate was already correct.
+	 */
+	readonly components: readonly ParsedComponent[];
+};
+
 function lineOfTs(node: Node): number | null {
 	const line = node.loc?.start?.line;
 	return typeof line === 'number' ? line : null;
 }
 
-function lineOfTemplate(parsed: Parsed, node: Node): number | null {
+function lineOfTemplate(parsed: ParsedComponent, node: Node): number | null {
 	const line = node.sourceSpan?.start?.line;
 	return typeof line === 'number' ? parsed.templateLine + line : null;
 }
@@ -458,11 +480,16 @@ function parseEmitted(file: string, source: string): Parsed | null {
 	} catch {
 		return null;
 	}
-	let component: Node | null = null;
+	// COLLECT, never overwrite. See the `components` doc comment on `Parsed`.
+	const classes: Node[] = [];
 	walkTs(module, (node) => {
-		if (node.type === 'ClassDeclaration' && decoratorNamed(node, 'Component')) component = node;
+		if (node.type === 'ClassDeclaration' && decoratorNamed(node, 'Component')) classes.push(node);
 	});
-	const decorator = component ? decoratorNamed(component, 'Component') : undefined;
+	return { module, components: classes.map((component) => parseComponent(file, component)) };
+}
+
+function parseComponent(file: string, component: Node): ParsedComponent {
+	const decorator = decoratorNamed(component, 'Component');
 	const metadata = (decorator?.expression?.arguments?.[0] as Node | undefined) ?? null;
 	const templateProperty = ((metadata?.properties ?? []) as Node[]).find(
 		(property) => property.type === 'Property' && property.key?.name === 'template',
@@ -475,7 +502,6 @@ function parseEmitted(file: string, source: string): Parsed | null {
 	const parsedTemplate =
 		template === null ? null : parseTemplate(template, file.replace(/\.ts$/, '.html'));
 	return {
-		module,
 		component,
 		metadata: metadata?.type === 'ObjectExpression' ? metadata : null,
 		template,
@@ -874,47 +900,59 @@ function observeForms(parsed: Parsed): ObservedForm[] {
 				line: lineOfTs(node),
 			});
 	});
-	for (const property of (parsed.metadata?.properties ?? []) as Node[])
-		found.push({
-			kind: 'component-metadata',
-			form: String(property.key?.name ?? property.key?.value ?? '?'),
-			line: lineOfTs(property),
-		});
-	if (parsed.metadata)
-		found.push({ kind: 'component-metadata', form: '(no standalone key)', line: null });
-	for (const clause of (parsed.component?.implements ?? []) as Node[])
-		found.push({ kind: 'class-heritage', form: 'implements', line: lineOfTs(clause) });
-	if (parsed.component?.superClass)
-		found.push({ kind: 'class-heritage', form: 'extends', line: lineOfTs(parsed.component) });
-	for (const member of (parsed.component?.body?.body ?? []) as Node[]) {
-		const line = lineOfTs(member);
-		if (member.type === 'PropertyDefinition')
-			found.push({ kind: 'class-member', form: member.static ? 'static-property' : 'property', line });
-		else if (member.type === 'MethodDefinition')
+	// EVERY component in the module, not just the last one - see `Parsed.components`.
+	for (const component of parsed.components) {
+		for (const property of (component.metadata?.properties ?? []) as Node[])
 			found.push({
-				kind: 'class-member',
-				form: member.kind === 'method' ? 'method' : String(member.kind),
-				line,
+				kind: 'component-metadata',
+				form: String(property.key?.name ?? property.key?.value ?? '?'),
+				line: lineOfTs(property),
 			});
-		else found.push({ kind: 'class-member', form: String(member.type), line });
-	}
-
-	walkTemplate(parsed.templateNodes, (node) => {
-		const name = templateNodeName(node);
-		const line = lineOfTemplate(parsed, node);
-		found.push({ kind: 'template-node', form: name, line });
-		if (name === 'BoundText') found.push({ kind: 'template-binding', form: 'interpolation', line });
-		if (name === 'BoundAttribute')
-			found.push({ kind: 'template-binding', form: bindingTypeName(node.type), line });
-		if (name === 'BoundEvent') found.push({ kind: 'template-binding', form: 'event', line });
-		if (name === 'IfBlock') found.push({ kind: 'control-flow', form: '@if', line });
-		if (name === 'IfBlockBranch' && node.expression === null)
-			found.push({ kind: 'control-flow', form: '@else', line });
-		if (name === 'ForLoopBlock') {
-			found.push({ kind: 'control-flow', form: '@for', line });
-			if (node.empty) found.push({ kind: 'control-flow', form: '@empty', line });
+		if (component.metadata)
+			found.push({ kind: 'component-metadata', form: '(no standalone key)', line: null });
+		for (const clause of (component.component.implements ?? []) as Node[])
+			found.push({ kind: 'class-heritage', form: 'implements', line: lineOfTs(clause) });
+		if (component.component.superClass)
+			found.push({
+				kind: 'class-heritage',
+				form: 'extends',
+				line: lineOfTs(component.component),
+			});
+		for (const member of (component.component.body?.body ?? []) as Node[]) {
+			const line = lineOfTs(member);
+			if (member.type === 'PropertyDefinition')
+				found.push({
+					kind: 'class-member',
+					form: member.static ? 'static-property' : 'property',
+					line,
+				});
+			else if (member.type === 'MethodDefinition')
+				found.push({
+					kind: 'class-member',
+					form: member.kind === 'method' ? 'method' : String(member.kind),
+					line,
+				});
+			else found.push({ kind: 'class-member', form: String(member.type), line });
 		}
-	});
+
+		walkTemplate(component.templateNodes, (node) => {
+			const name = templateNodeName(node);
+			const line = lineOfTemplate(component, node);
+			found.push({ kind: 'template-node', form: name, line });
+			if (name === 'BoundText')
+				found.push({ kind: 'template-binding', form: 'interpolation', line });
+			if (name === 'BoundAttribute')
+				found.push({ kind: 'template-binding', form: bindingTypeName(node.type), line });
+			if (name === 'BoundEvent') found.push({ kind: 'template-binding', form: 'event', line });
+			if (name === 'IfBlock') found.push({ kind: 'control-flow', form: '@if', line });
+			if (name === 'IfBlockBranch' && node.expression === null)
+				found.push({ kind: 'control-flow', form: '@else', line });
+			if (name === 'ForLoopBlock') {
+				found.push({ kind: 'control-flow', form: '@for', line });
+				if (node.empty) found.push({ kind: 'control-flow', form: '@empty', line });
+			}
+		});
+	}
 	return found;
 }
 
@@ -993,6 +1031,10 @@ function inventoryViolations(file: string, parsed: Parsed): GateViolation[] {
  * interpolation".
  */
 function whitespaceViolations(file: string, parsed: Parsed): GateViolation[] {
+	return parsed.components.flatMap((component) => componentWhitespaceViolations(file, component));
+}
+
+function componentWhitespaceViolations(file: string, parsed: ParsedComponent): GateViolation[] {
 	const violations: GateViolation[] = [];
 	walkTemplate(parsed.templateNodes, (node) => {
 		const name = templateNodeName(node);
@@ -1106,6 +1148,10 @@ function signalViolations(file: string, parsed: Parsed): GateViolation[] {
  * Read off Angular's own parse (`BindingType.TwoWay`) rather than off the text.
  */
 function twoWayViolations(file: string, parsed: Parsed): GateViolation[] {
+	return parsed.components.flatMap((component) => componentTwoWayViolations(file, component));
+}
+
+function componentTwoWayViolations(file: string, parsed: ParsedComponent): GateViolation[] {
 	const violations: GateViolation[] = [];
 	walkTemplate(parsed.templateNodes, (node) => {
 		const name = templateNodeName(node);
@@ -1187,7 +1233,9 @@ function outputViolations(file: string, parsed: Parsed): GateViolation[] {
  */
 function changeDetectionViolations(file: string, parsed: Parsed): GateViolation[] {
 	const violations: GateViolation[] = [];
-	for (const property of (parsed.metadata?.properties ?? []) as Node[])
+	for (const property of parsed.components.flatMap(
+		(component) => (component.metadata?.properties ?? []) as Node[],
+	))
 		if (property.key?.name === 'changeDetection')
 			violations.push(
 				violation(
@@ -1224,7 +1272,9 @@ function stopPropagationViolations(file: string, parsed: Parsed): GateViolation[
 
 function getterViolations(file: string, parsed: Parsed): GateViolation[] {
 	const violations: GateViolation[] = [];
-	for (const member of (parsed.component?.body?.body ?? []) as Node[]) {
+	for (const member of parsed.components.flatMap(
+		(component) => (component.component.body?.body ?? []) as Node[],
+	)) {
 		if (member.type !== 'MethodDefinition' || member.kind !== 'get') continue;
 		for (const { node, reason } of impureNodes(member.value as Node))
 			violations.push(
@@ -1247,6 +1297,15 @@ function getterViolations(file: string, parsed: Parsed): GateViolation[] {
  * Angular's own parser accepts?
  */
 function templateParseViolations(file: string, parsed: Parsed): GateViolation[] {
+	return parsed.components.flatMap((component) =>
+		componentTemplateParseViolations(file, component),
+	);
+}
+
+function componentTemplateParseViolations(
+	file: string,
+	parsed: ParsedComponent,
+): GateViolation[] {
 	if (parsed.template === null)
 		return [
 			violation(
@@ -1283,7 +1342,7 @@ async function sourceViolations(file: string, source: string): Promise<GateViola
 			...violations,
 			violation(file, 'generated-header', 'TypeScript could not parse emitted source', 1),
 		];
-	if (!parsed.component)
+	if (parsed.components.length === 0)
 		return [
 			...violations,
 			violation(

@@ -214,9 +214,13 @@ describe('Svelte dossier gate', () => {
 	 * tier: this gate's standing corpus is `generated/` ONLY, and
 	 * `generated-composition/` ships committed artifacts no policy in this package
 	 * had ever been pointed at. React and Solid gate their composition tier for
-	 * real; T015 closed Qwik's, which draws zero violations. THIS LANE DRAWS FOUR
-	 * VIOLATIONS ACROSS TWO FILES - the most of any lane - and one of them is not
+	 * real; T015 closed Qwik's, which draws zero violations. THIS LANE DREW FOUR
+	 * VIOLATIONS ACROSS TWO FILES - the most of any lane - and one of them was not
 	 * an inventory question at all.
+	 *
+	 * T018 PAID THAT FOURTH ONE AT THE EMITTER, so the pin is now THREE. See
+	 * `THE ONE THAT IS PAID` below; the three that remain are one cross-lane
+	 * ruling, owned by T017.
 	 *
 	 * THREE UNRULED INVENTORY FORMS:
 	 *
@@ -230,18 +234,26 @@ describe('Svelte dossier gate', () => {
 	 *   Angular and Vue carry the SAME form, so the fix is structural and
 	 *   cross-lane.
 	 *
-	 * AND ONE THAT IS NOT ABOUT THE INVENTORY AT ALL, WHICH IS WHY THIS DIRECTORY
-	 * BEING UNGATED MATTERED: `eslint:svelte/no-useless-mustaches` fires on
-	 * `M2-page.svelte`, because the emitter prints `label={'Composed'}` for a
-	 * static string prop where `label="Composed"` is the idiomatic spelling. THE
-	 * THIRD-PARTY ARBITER HAS BEEN REPORTING THAT SINCE THE FILE WAS COMMITTED AND
-	 * NOTHING WAS LISTENING. T015 did not touch the emitter - its card forbade
-	 * modifying an emitter to satisfy a gate, and this is a genuine emitter finding
-	 * that needs its own card, not a silenced rule.
+	 * THE ONE THAT IS PAID, AND IT WAS NEVER AN INVENTORY QUESTION - WHICH IS WHY
+	 * THIS DIRECTORY BEING UNGATED MATTERED. `eslint:svelte/no-useless-mustaches`
+	 * fired on `M2-page.svelte` because the emitter printed `label={'Composed'}`
+	 * for a static string prop where `label="Composed"` is the idiomatic spelling.
+	 * THE THIRD-PARTY ARBITER REPORTED THAT FROM THE DAY THE FILE WAS COMMITTED AND
+	 * NOTHING WAS LISTENING. T015 was forbidden to touch an emitter; T018 fixed it
+	 * at `quotableStringProp` in `src/emitter/index.ts` and REGENERATED the
+	 * artifact, and the rule was never silenced - the row below plants the exact
+	 * shape the emitter used to print and watches upstream still report it.
+	 *
+	 * `pnpm lint` CANNOT SEE ANY OF THIS, and that is the reason this row exists at
+	 * all: `pnpm lint` is oxlint over 93 rules and does not carry
+	 * `svelte/no-useless-mustaches`; it linted this very file at 0 warnings, 0
+	 * errors while the finding was live. THIS GATE is the only instrument in the
+	 * repo that holds the rule.
 	 *
 	 * The violation set is asserted as a LITERAL so this goes red the day any of
-	 * the four is addressed, a fixture is added, or the emitter changes. Measured
-	 * in `docs/goals/frameless-app-axes-v1/notes/T015-composition-gate-hole.md`.
+	 * the three is addressed, a fixture is added, or the emitter changes. Measured
+	 * in `docs/goals/frameless-app-axes-v1/notes/T015-composition-gate-hole.md` and
+	 * `.../notes/T018-emitter-findings.md`.
 	 */
 	test('DEBT PIN: generated-composition/ is discovered, gated by hand, and STILL DRAWS violations', async () => {
 		const expected = compositionFixtures
@@ -270,10 +282,6 @@ describe('Svelte dossier gate', () => {
 			{ file: 'generated-composition/M1-panel.svelte', policy: 'baseline-form-inventory' },
 			{ file: 'generated-composition/M2-page.svelte', policy: 'baseline-form-inventory' },
 			{ file: 'generated-composition/M2-page.svelte', policy: 'baseline-form-inventory' },
-			{
-				file: 'generated-composition/M2-page.svelte',
-				policy: 'eslint:svelte/no-useless-mustaches',
-			},
 		]);
 		// The FORMS, not just the count.
 		expect(result.violations[0]!.message).toContain('template-node form "RenderTag"');
@@ -281,15 +289,21 @@ describe('Svelte dossier gate', () => {
 		expect(result.violations[2]!.message).toContain(
 			'import form "./M1-panel.svelte#default"',
 		);
-		// And the arbiter's finding is pinned to the SPELLING it is about, so a
-		// future emitter that stops printing it turns this row red rather than
-		// leaving a stale expectation nobody re-reads.
+		// THE PAID DEBT IS PINNED TO ITS SPELLING, BOTH WAYS. The artifact must carry
+		// the quoted attribute AND must not carry the mustache anywhere, so an emitter
+		// regression turns this row red rather than leaving a stale expectation. The
+		// negative half is the load-bearing one: the positive half alone would still
+		// pass if a second, useless mustache appeared beside it.
+		const composed = await readFile(
+			resolve(packageRoot, `generated-composition/M2-page${COMPOSITION_EXTENSION}`),
+			'utf8',
+		);
+		expect(composed).toContain('label="Composed"');
+		expect(composed).not.toContain("={'");
 		expect(
-			await readFile(
-				resolve(packageRoot, `generated-composition/M2-page${COMPOSITION_EXTENSION}`),
-				'utf8',
-			),
-		).toContain("label={'Composed'}");
+			result.violations.map((entry) => entry.policy),
+			JSON.stringify(result.violations, null, 2),
+		).not.toContain('eslint:svelte/no-useless-mustaches');
 	});
 
 	/**
@@ -827,9 +841,45 @@ describe('third-party arbiter: eslint-plugin-svelte (T009)', () => {
 		expect(await eslintMessagesFor('generated/S3.svelte', s3)).toEqual([]);
 	});
 
-	test('RED: svelte/no-useless-mustaches', async () => {
+	/**
+	 * TWO PLANTS, AND THE SECOND ONE IS WHY THIS ROW MATTERS AFTER T018.
+	 *
+	 * The first plant is a TEXT mustache. It proves the rule is wired, and it is
+	 * the plant this row shipped with - but it does NOT prove the rule reaches a
+	 * COMPONENT ATTRIBUTE, which is the position the emitter was actually printing
+	 * `label={'Composed'}` into. A green from a text plant is compatible with the
+	 * rule never looking at attributes at all.
+	 *
+	 * So the second plant reverts the REAL artifact, byte for byte, to the exact
+	 * spelling the emitter emitted before `quotableStringProp` - and upstream still
+	 * reports it. Paired with the control on the SHIPPED artifact, which draws zero
+	 * eslint messages, that is what makes the fix's green distinguishable from a
+	 * disabled rule. `pnpm lint` cannot make this distinction at any strength: it
+	 * is oxlint, it does not carry `svelte/no-useless-mustaches`, and it linted
+	 * `generated-composition/M2-page.svelte` at 0 warnings and 0 errors on the day
+	 * the finding was live.
+	 */
+	test('RED: svelte/no-useless-mustaches - in TEXT and on a COMPONENT PROP', async () => {
 		const mutant = mutate(s1, '>increment<', ">{'increment'}<");
 		expect(await eslintMessagesFor('generated/MustacheMutant.svelte', mutant)).toEqual([
+			{
+				policy: 'eslint:svelte/no-useless-mustaches',
+				message: 'Unexpected mustache interpolation with a string literal value.',
+			},
+		]);
+		const composed = await readFile(
+			resolve(packageRoot, `generated-composition/M2-page${COMPOSITION_EXTENSION}`),
+			'utf8',
+		);
+		// The CONTROL first: what ships draws nothing, so the plant below is
+		// attributable to the plant and not to anything else in the file.
+		expect(await eslintMessagesFor('generated-composition/M2-page.svelte', composed)).toEqual(
+			[],
+		);
+		const planted = mutate(composed, 'label="Composed"', "label={'Composed'}");
+		expect(
+			await eslintMessagesFor('generated-composition/MustachePropMutant.svelte', planted),
+		).toEqual([
 			{
 				policy: 'eslint:svelte/no-useless-mustaches',
 				message: 'Unexpected mustache interpolation with a string literal value.',

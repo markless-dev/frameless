@@ -3,6 +3,6 @@
 	import Panel from './M1-panel.svelte';
 </script>
 
-<Panel label={'Composed'}
+<Panel label="Composed"
 	><p data-panel-copy>Projected across the module boundary</p
 ></Panel>

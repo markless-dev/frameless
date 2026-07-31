@@ -2329,6 +2329,134 @@ the write is only useful to a future render read.
 
 ---
 
+## 19. The Svelte emitter printed a useless mustache, and upstream reported it to nobody for the whole life of the composition tier — **CLOSED — frameless's own emitted output**
+
+> **Measured by `frameless-app-axes-v1` T015, which was forbidden to touch an
+> emitter; fixed by T018.** This entry is filed for **one lane** — svelte — and
+> the other five were run before that scope was written down, per the standing
+> rule entry 15 bought.
+
+**Status:** CLOSED — **removed, not contained**, and the rule was never silenced.
+
+**WHAT IT WAS.** `renderComponentReference` in
+`packages/frameworks/svelte/src/emitter/index.ts` sent every component prop
+through `printExpression`, so the authored `<Panel label="Composed">` came back
+out as `label={'Composed'}`. `eslint-plugin-svelte`'s
+`svelte/no-useless-mustaches` reported *"Unexpected mustache interpolation with a
+string literal value"* on `generated-composition/M2-page.svelte` from the day the
+file was committed.
+
+**WHY NOBODY HEARD IT, AND THIS IS THE PART WORTH KEEPING.** The rule lives in
+**one instrument in this repository**: the svelte gate's own programmatic ESLint
+(`packages/frameworks/svelte/src/gate/index.ts`). Until T015, no test in the
+package had ever pointed that gate at `generated-composition/`. And the obvious
+place to look for a lint finding **cannot see it at any strength**: `pnpm lint` is
+oxlint over 93 rules and does not carry the rule at all. MEASURED, with the defect
+planted back into the artifact on purpose:
+
+| instrument | on the artifact carrying `label={'Composed'}` |
+| --- | --- |
+| `pnpm lint` (oxlint, 552 files, 93 rules) | **0 warnings, 0 errors** |
+| `pnpm exec vp lint <that one file>` | **0 warnings, 0 errors** |
+| the svelte gate's `checkSources` | **`eslint:svelte/no-useless-mustaches`, line 6** |
+
+So a green from `pnpm lint` here is **indistinguishable from a disabled rule, and
+always will be**. That is a property of the tool, not of this defect.
+
+**THE FIX, AND WHY IT IS NOT A BEHAVIOUR CHANGE.** `quotableStringProp` prints a
+plain string-literal prop as the quoted attribute. Equivalence measured through
+svelte's **own** compiler at 5.56.8 rather than asserted:
+`<P label={'Composed'}>x</P>` and `<P label="Composed">x</P>` produce
+**byte-identical `js.code`** in `client` and `server`, dev and prod — childless,
+with children, for the empty string, and for a value containing `& < > { } "` put
+through `escapeAttributeValue`, which is what proves the entity round-trip is
+lossless.
+
+**AND A DELIBERATE ASYMMETRY, RECORDED SO IT IS NOT READ AS AN OVERSIGHT.** It is
+**not** applied to host attributes, because for a host the two spellings are *not*
+the same compiled artifact: `<p data-x="y">` bakes the attribute into the template
+HTML while `<p data-x={'y'}>` calls `set_attribute` at runtime. There are zero
+`={'` occurrences under `generated/`, so no emitted byte turns on it either way.
+
+**What reports a regression.** Three rows, and the last is the one that matters:
+`test/composition.test.ts` asserts the emitted page contains `label="Composed"`
+and **no** `={'` anywhere; the same file re-runs the compiled-equivalence
+measurement including the host negative; and `test/gate.test.ts` reverts the real
+artifact byte-for-byte to `label={'Composed'}` and requires **upstream to still
+report it**, with the shipped artifact drawing zero eslint messages as the
+control. Without that last pair, a green would be worth nothing.
+
+---
+
+## 20. The Angular gate parsed only the LAST `@Component` in a file, so half of a two-component module was never inspected — **CLOSED — test-suite defect**
+
+> **Measured by `frameless-app-axes-v1` T015 (§5.1), which recorded it and
+> deliberately did not repair it; repaired by T018.** Not emitted-output: this is
+> an **instrument** defect, the same family as entries 4 and 6.
+
+**Status:** CLOSED — **removed**, and it made a real violation visible that had
+been counted by eye and never by the gate.
+
+**WHAT IT WAS.** `parseEmitted` in `packages/frameworks/angular/src/gate/index.ts`
+walked the module and **overwrote** its `component` binding on every match:
+
+```ts
+walkTs(module, (node) => {
+	if (node.type === 'ClassDeclaration' && decoratorNamed(node, 'Component')) component = node;
+});
+```
+
+So a module declaring two components was inspected **only at the last one**. Every
+component-scoped policy in the file — `baseline-form-inventory`,
+`whitespace-stable-text`, `no-two-way-binding`, `no-change-detection-override`,
+`getter-expression-purity`, `template-parse` — silently skipped everything before
+it, including that component's **entire template**. The module-scoped policies
+(`no-signal-members`, `no-output-emitter`, `no-stop-propagation`, and the
+import/decorator half of `observeForms`) walk `module` and were always correct,
+which is exactly why this could sit unnoticed: **half the gate was already right.**
+
+**WHAT IT WAS HIDING.** `generated-composition/C1-slot.ts` declares `Frame` then
+`SlotPage`. `Frame`'s `<ng-content />` was never observed, so the file reported
+**zero** uninventoried forms while `M1-panel.ts` reported `template-node:Content`
+for the identical construct. T015 named that as the likely origin of the **phantom
+fifth violation** in T009's ruling, which measured four. **The phantom was real,
+and it is now counted.**
+
+**WHAT THE FIX MOVED, MEASURED BOTH WAYS.** The HEAD gate and the fixed gate were
+run side by side over both directories:
+
+| directory | in the standing corpus? | before | after |
+| --- | --- | --- | --- |
+| `generated/` (15 files) | **yes** | 0 violations | **0 violations** |
+| `generated-composition/` (3 files) | **no — already red** | 2 violations | **3 violations** |
+
+**NO GREEN GATE TURNED RED.** `generated-composition/` was already failing; the
+better instrument made it fail *bigger*. **Nothing was admitted to
+`BASELINE_FORM_INVENTORY` to absorb the third violation** — `Content` is still
+uninventoried, the inventory still holds its 32 entries and
+`ANGULAR_BASELINE_FLOOR` is unmoved at `19.0`. The joint
+`template-node:Content` / `ng-content`-must-reject ruling is unchanged in
+substance and still owned by T017; it now has **two** shipping files to move
+rather than one.
+
+**Why it was harmless in `generated/`, and how that stays true.** `C1-slot.ts` is
+still the only multi-component emitted file in the package — every other emitted
+Angular artifact carries exactly one `@Component({`, asserted per file in
+`test/gate.test.ts`.
+
+**What reports a regression.** The shipped corpus **cannot** supply the killing
+mutation, because every rejected form it contains sits in a single-component file
+the old parser saw anyway. So `test/gate.test.ts` plants **three** rejected forms
+on the **first** of `C1-slot.ts`'s two components, each reaching the gate by a
+different scoped path — a two-way binding (template), a `changeDetection` override
+(decorator metadata) and an impure getter (class member) — and asserts each is
+reported **at a line inside the first component**. A file-level "the gate said
+something" would pass just as well if the second component had grown the form. The
+unmutated artifact drawing exactly its one known violation is the control.
+Reverting `parseEmitted` turns **both** that row and the debt pin red.
+
+---
+
 ## Closed, for the record
 
 **`findings-001` — `engines.node: ">=20"` was false.** The toolchain cannot load
@@ -2358,6 +2486,8 @@ matrix proved green rather than from the error message's claim.
 | 15  | **product defect — OPEN, REACT ONLY (amended)** | **not contained** — no refusal anywhere: the casing is destroyed in the compiler (`jsxEventName` in `packages/compiler/src/build.ts`), so no emitter can spell `onKeyDown` **as react-dom needs it** and react's emitted binding is inert at runtime. **The other five lanes bind by the DOM event name, which is what the flattening produces, and they FIRE** — measured in browsers (T005) with the react row re-measured (T011). The residue that is genuinely six-lane is narrower: a flattened name that is not a real DOM event, such as `doubleclick` from `onDoubleClick` | a per-lane spelling map **for react** (`dblclick` → React's `onDoubleClick` shares no stem with it), **and** a compiler-side refusal so `/^on[A-Z]/` stops accepting a name it is about to flatten |
 | 16  | **not a defect**                | nothing to change in any emitter — the Svelte a11y refusals are correct and canonical TodoMVC's clickable `<label>` is the anti-pattern | **nothing** — rendered via a marked supplement (T007), vendored bytes untouched |
 | 18  | **product defect — CLOSED**     | **removed**, not contained: `appendPersistenceWrites` reads the committed accessor instead of re-evaluating a cloned setter argument, and grows a plain-`let` arm so a handler-only persisted cell writes back (T016). Witnessed in chromium before and after on the same served bytes — before, Solid stored `"all"` while the screen read `done` and **forgot on reload**; after, it survives, matching React | none for the defect — a **contract limit** is recorded above: a handler-only record has `seed.lowering: 'none'`, so it is write-only until something reads the cell in render |
+| 19  | **product defect — CLOSED, SVELTE ONLY** | **removed**, not contained: `quotableStringProp` prints a plain string-literal component prop as the quoted attribute, and `generated-composition/M2-page.svelte` was REGENERATED (T018). Equivalence measured through svelte's own compiler — byte-identical `js.code` in client and server, dev and prod, including the entity round-trip | none for the defect — but the instrument finding stands on its own: **`pnpm lint` cannot see `svelte/no-useless-mustaches` at any strength**, measured with the defect planted back, so only the svelte gate's own ESLint reports it |
+| 20  | test-suite defect               | **instrument repaired** (T018): `parseEmitted` collects EVERY `@Component` in a module instead of keeping the last one, and the mutation that kills it plants three rejected forms on the FIRST of two components | none — but it made a real violation visible: `generated-composition/` went from 2 to 3, `generated/` stayed at 0, and **nothing was admitted to the inventory to absorb it**. The `Content` ruling is still T017's, now over two files |
 | 17  | **product defect — OPEN**       | **contained only by hand** — fixture constraints and board `stop_if` clauses. Every valued static attribute reaches every emitter as a **string** (`StaticAttribute` in `packages/compiler/src/schema.ts`) and no lane's declared JSX prop type is consulted anywhere, so the emitted output fails that lane's own `tsc`. Measured per lane: `rows="6"` costs react and qwik and is free in solid; `draggable="true"` costs qwik alone; the valueless `draggable` costs react alone | a refusal at authoring time instead of a convention — and, first, a ruling on whether the value's kind belongs in the IR or in a per-lane attribute table |
 
 **Entries 7, 8, 13, 15 and 17 are the OPEN defects in frameless's own emitted

@@ -75,8 +75,56 @@ describe('Svelte composition', () => {
 		// of the target format, and it is the same divergence this lane's `emit`
 		// header already records for the export side.
 		expect(page).toContain("import Panel from './M1-panel.svelte';");
-		expect(page).toContain("<Panel label={'Composed'}");
+		// T018. A prop whose value is a plain string LITERAL prints as the QUOTED
+		// attribute, not as `label={'Composed'}`. The mustache spelling is what
+		// `eslint-plugin-svelte`'s `svelte/no-useless-mustaches` had been reporting
+		// inside this package's own gate, unheard, since the file was committed -
+		// see `quotableStringProp` and test/gate.test.ts.
+		expect(page).toContain('<Panel label="Composed"');
+		expect(page).not.toContain("={'");
 		expect(page).toContain('</Panel>');
+	});
+
+	/**
+	 * THE EQUIVALENCE THE T018 EMITTER CHANGE RESTS ON, MEASURED RATHER THAN
+	 * ASSERTED - and measured through svelte's OWN compiler, which is the only
+	 * authority on whether two spellings are the same component.
+	 *
+	 * `label={'Composed'}` and `label="Composed"` must produce BYTE-IDENTICAL
+	 * `js.code` in both `client` and `server` mode, or the emitter change was a
+	 * behaviour change wearing a formatting change's clothes. The escape case is
+	 * the load-bearing one: `escapeAttributeValue` rewrites `& < > { } "` to
+	 * entities, so this row is what proves the quoted spelling ROUND-TRIPS them
+	 * rather than passing a different string.
+	 *
+	 * The HOST row is a deliberate NEGATIVE: for an element attribute the two
+	 * spellings are NOT the same compiled artifact - the quoted form bakes into
+	 * the template HTML, the mustache form calls `set_attribute` at runtime - which
+	 * is precisely why `quotableStringProp` is applied to component props ONLY.
+	 * Recorded as a measurement so the asymmetry is not read as an oversight.
+	 */
+	test('a quoted component prop compiles identically to its mustache, and a host attribute does NOT', () => {
+		const component = (attribute: string) =>
+			`<script>import P from './p.svelte';</script>\n<P ${attribute}>x</P>`;
+		const cases: ReadonlyArray<readonly [string, string]> = [
+			["label={'Composed'}", 'label="Composed"'],
+			["label={''}", 'label=""'],
+			["label={'a&<>{}\"b'}", 'label="a&amp;&lt;&gt;&#123;&#125;&quot;b"'],
+		];
+		for (const [mustache, quoted] of cases)
+			for (const { generate, dev } of MODES)
+				expect(
+					compile(component(mustache), { filename: 'Probe.svelte', generate, dev }).js.code,
+					`${mustache} vs ${quoted} (${generate}, dev=${dev})`,
+				).toBe(
+					compile(component(quoted), { filename: 'Probe.svelte', generate, dev }).js.code,
+				);
+		expect(
+			compile("<p data-x={'y'}>t</p>", { filename: 'Probe.svelte', generate: 'client' }).js
+				.code,
+		).not.toBe(
+			compile('<p data-x="y">t</p>', { filename: 'Probe.svelte', generate: 'client' }).js.code,
+		);
 	});
 
 	test('generated-composition is fresh from its fixtures', async () => {

@@ -1367,6 +1367,52 @@ function renderKeyedRepeat(
 }
 
 /**
+ * A component prop whose value is a plain string literal, spelled as the QUOTED
+ * attribute rather than as a mustache.
+ *
+ * WHY THIS EXISTS. The printer used to send every component prop through
+ * `printExpression`, so `<Panel label="Composed">` in `.tsrx` came back out as
+ * `label={'Composed'}`. `eslint-plugin-svelte`'s `svelte/no-useless-mustaches`
+ * reported that on `generated-composition/M2-page.svelte` from the day the file
+ * was committed - inside THIS package's own gate, which is the only instrument
+ * in the repo that carries the rule (`pnpm lint` is oxlint and does not have
+ * it). Nothing was pointed at that directory until `frameless-app-axes-v1` T015,
+ * so the finding was reported to nobody for the whole life of the composition
+ * tier. It is fixed here at the emitter, never by silencing the rule.
+ *
+ * MEASURED EQUIVALENCE, at svelte 5.56.8, rather than assumed: compiling
+ * `<P label={'Composed'} />` and `<P label="Composed" />` yields BYTE-IDENTICAL
+ * `js.code` in BOTH `generate: 'client'` and `generate: 'server'` - childless and
+ * with children, for the empty string, and for a value containing `& < > { } "`
+ * put through `escapeAttributeValue`, which is what proves the entity round-trip
+ * is lossless. So this changes the emitted SPELLING and nothing a component can
+ * observe.
+ *
+ * IT IS DELIBERATELY NOT APPLIED TO HOST ATTRIBUTES, and that is measured too:
+ * for a host, `<p data-x={'y'}>` compiles to `set_attribute` at runtime while
+ * `<p data-x="y">` bakes the attribute into the template HTML - DIFFERENT client
+ * `js.code` (server output is identical). Equivalent in behaviour, but it is a
+ * different compiled artifact, so it is a separate decision from the one this
+ * card was dispatched to make. There are ZERO `={'` occurrences under this
+ * lane's `generated/` today, so no emitted byte turns on it either way.
+ *
+ * A value containing a newline stays a mustache: a quoted attribute value may
+ * legally hold one, but it would put a raw line break inside a start tag that
+ * the width/`fits` arithmetic here does not model.
+ */
+function quotableStringProp(
+	prop: Extract<TemplateNode, { kind: 'component-reference' }>['props'][number],
+): string | undefined {
+	const value = prop.value.expression;
+	// A regex literal is also `type: 'Literal'`, and its `value` is not a string,
+	// so the `typeof` check already excludes it; `regex` is checked as well so the
+	// exclusion does not depend on how a serialiser chose to render RegExp.
+	if (value.type !== 'Literal' || value.regex !== undefined) return undefined;
+	if (typeof value.value !== 'string' || /[\n\r]/.test(value.value)) return undefined;
+	return value.value;
+}
+
+/**
  * STEP 5, COMPOSITION. A `.svelte` file IS a component, so a reference to one is
  * a capitalised tag over an imported default binding - the same shape React and
  * Solid print, with the specifier rewritten from `.tsrx` to `.svelte`.
@@ -1398,6 +1444,8 @@ function renderComponentReference(
 	const attributes = node.props.map((prop) => {
 		if (!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(prop.name))
 			throw new Error(`Svelte emitter rejects the component prop name ${prop.name}`);
+		const literal = quotableStringProp(prop);
+		if (literal !== undefined) return `${prop.name}="${escapeAttributeValue(literal)}"`;
 		return `${prop.name}={${indentContinuation(printExpression(expression(prop.value.expression)), `${indent}\t`)}}`;
 	});
 	const singleLine = `<${name}${attributes.map((attribute) => ` ${attribute}`).join('')}`;
