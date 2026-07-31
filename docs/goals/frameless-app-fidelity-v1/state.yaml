@@ -44,7 +44,7 @@ goal:
       FIXING THE FIVE FINDINGS AND LEAVING THE ORACLE HOLE OPEN. The findings are symptoms; the
       cause is that nothing ever compared a shipped app to the thing it copies.
 
-active_task: T002
+active_task: T006
 
 rules:
   - "state.yaml is board truth; goal.md is the charter."
@@ -228,14 +228,17 @@ tasks:
   - id: T002
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       RULE ON ROUTING. Every link in every shipped app is a stub, because there is NO ROUTING
       CONSTRUCT IN .tsrx AT ALL. Decide what the answer is.
     WHAT_THE_OWNER_SAW: >-
-      MEASURED on /hn in the qwik lane: 43 anchors, ALL 43 carrying href="#/..." - the masthead,
-      every story title, every domain, every comments link. They render correctly and go nowhere.
+      CORRECTED BY T002, WHICH MEASURED IT BY SSR-RENDERING RATHER THAN LOOKING: /hn has 43 anchors
+      but 31 STUBS AND 12 REAL ABSOLUTE URLS. THE STORY TITLES ARE THE REAL ONES, held on the page
+      by a deliberate preventDefault, AND THE DOMAIN IS A <span>, NOT AN ANCHOR - which hid a
+      genuine fidelity gap, since real HN's domain IS a link. Across all shipped apps: 84 anchors,
+      71 stubs, 13 real. They render correctly and go nowhere.
       There is also NO per-item disclosure on the front page; collapse exists only on /hn-item as
       comment folding, which is a different control the owner reasonably expected to find.
     THE_THREE_CANDIDATE_ANSWERS_AND_NONE_IS_OBVIOUS: >-
@@ -257,8 +260,40 @@ tasks:
       - "measured link and stub counts across all shipped apps"
       - "what it excludes, stated plainly"
       - "worker spec if it should proceed"
-    receipt: null
-
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      harness: claude-code
+      summary: "RULED: candidate 1 (HOST ROUTING), SCOPED, PLUS candidate 3 as the RESIDUAL - not one or the other. THE DECIDING CONSTRAINT IS DESTINATION AVAILABILITY, NOT AUTHORING-SURFACE EXPRESSIVENESS. Measured by SSR-rendering every shipped app: 84 anchors, 71 stubs, 13 real. Per-item disclosure on /hn is REFUSED because THE REFERENCE DOES NOT HAVE IT."
+      THE_LINKS_ARE_NOT_DEAD_FOR_THE_REASON_THE_PM_GAVE: "'No routing construct in .tsrx' IS TRUE - verified at packages/compiler/src/schema.ts, not at a document quoting it. BUT THE INFERENCE IS FALSE. EVERY STUB ALREADY CARRIES event.preventDefault() + onTrace('nav', { to: 'new' }, event). The destination is ALREADY NAMED, LOWERED AND EMITTED AS A TYPED CALLBACK PROP. THE LINKS DIE AT THE HOST: `const noTrace = () => {}` in react, solid, svelte, vue and angular, and an inline no-op in qwik. demos/react-official/src/App.jsx STATES THE NON-SEQUITUR OUT LOUD: '.tsrx has no routing construct, SO this page is not reachable from /hn by clicking.' THE 'SO' IS WRONG."
+      THREE_BRIEF_ERRORS_AND_THE_SECOND_IS_DECISIVE: "(1) '43 anchors, ALL 43 stubs, every story title, every domain' - MEASURED FALSE: 31 stubs and 12 REAL ABSOLUTE URLS. The story titles are the real ones (href={story.url}), deliberately preventDefault'ed per the fixture's own constraint 11. AND THE DOMAIN IS A <span>, NOT AN ANCHOR - which HID A GENUINE FIDELITY GAP, since real HN's domain IS a link to /from?site=. (2) 'Host routing adds per-lane host code the oracle forbids' - FALSE AND DECISIVE. goal.md forbids hand-written per-lane APP code and every stop_if scopes that to generated/ and src/emitted/. demos/angular-official/src/app/hn-page.ts says so ITSELF: 'NOTHING HERE IS EMITTED OUTPUT and nothing here is app code'. 4,582 LINES OF HAND-WRITTEN HOST CODE ALREADY SHIP AND ALREADY PASS. CANDIDATE 1'S STATED DISQUALIFIER DOES NOT EXIST. (3) A fourth thing the brief never mentions: S14 /hn-item SHIPS IN FOUR LANES, NOT SIX - svelte and vue emit no HnItem at all."
+      THE_DECIDING_MEASUREMENT: "Of the 31 /hn stubs: 2 -> /hn, which exists in six lanes; 12 -> /hn-item, which exists in FOUR LANES ONLY; and 17 HAVE NO DESTINATION AND CANNOT ACQUIRE ONE - #/newest #/ask #/show #/jobs #/submit #/login #/guidelines #/faq #/api and the rest are EACH A SEPARATE APPLICATION. A full .tsrx routing construct - 28,191 lines of emitter across six lanes plus a new IR node kind, 17 goldens, six gates - WOULD LEAVE THOSE 17 DEAD ANYWAY, and buys 14 links of which only 2 resolve in all six lanes."
+      DISCLOSURE_IS_REFUSED_AND_THE_REFERENCE_IS_THE_REASON: "T001's rendered capture of news.ycombinator.com records the front-page per-item set VERBATIM: '170 points by Jrh0203 1 hour ago | hide | 59 comments'. NO disclosure, NO collapse, NO [-]. Probed our /hn: 12 data-hide, 12 data-unvote, ZERO collapse - THE REFERENCE'S EXACT SHAPE. Collapse exists on real HN only on ITEM pages, which is exactly where ours is. ADDING A PER-ITEM DISCLOSURE TO /hn WOULD BE A FIDELITY REGRESSION UNDER THIS BOARD'S OWN ORACLE PART 1. The owner's expectation is one THE REFERENCE DOES NOT SUPPORT."
+      rationale: "Destinations decide this, not constructs. The intent is already lowered and typed; only the SINK is missing, and the sink is host code the oracle never forbade. Candidate 2 costs six emitters plus a new IR kind and buys 14 links - a board, not a card, and not bought by this measurement. Candidate 3 is right for the 17-link residual ONLY."
+      evidence:
+        - "ANCHOR CENSUS by SSR-RENDERING the emitted React components with react-dom/server, NOT source-grep: s10 3/3 stub, s11 3/3, s12 0, s13 43 = 31 stub + 12 REAL, s14 21 = 20 + 1, s15 2/2, s16 3/3, s17 9/9. TOTAL 84 anchors, 71 stubs (84.5%), 13 real"
+        - "The 12 story titles carry href={story.url} - github.com, frameless.dev, angular.dev, vuejs.org, qwik.dev, solidjs.com"
+        - "<a class=\"hn-domain\"> false, <span class=\"hn-domain\"> true, 12 nodes. Real HN's domain IS a link"
+        - "goal.md's own wording plus every worker stop_if scopes the ban to generated/ and src/emitted/; existing host code react 562 solid 527 qwik 645 svelte 757 vue 863 angular 1228 = 4,582 lines"
+        - "packages/compiler/src/schema.ts node kinds contain no route kind; grep over packages/compiler/src/ returns one prose comment. TRUE at origin"
+        - "The no-op sinks: react App.jsx:30, solid App.jsx:30, svelte lib/scenario-props.ts:11, vue scenario-props.ts:26, angular app/scenario-props.ts:21, qwik routes/hn/index.tsx:44"
+        - "demos/svelte-official/src/lib/emitted/ and demos/vue-official/src/emitted/ contain NO HnItem; svelte has no hn-item route directory; vue's App.vue has zero occurrences"
+        - "Candidate 2 cost: 28,191 lines of emitter source plus a new schema node kind, 17 goldens, six gates, emitted-typecheck and size baselines. @markless/router IS vendored and pinned but is a Vite/route-manifest package, NOT an authoring primitive"
+        - "s16-task-board.tsrx's tb-note/tb-notemark/tb-notetext is the in-corpus DISCLOSURE PRECEDENT for the residual - copy it, do not invent one"
+        - "OWNER PATHS with shasum -a 256: f326d314 / aeb7edc1 / f936e169 at 116 files, matching the board exactly. FOREIGN PIDs 64413 and 24931 alive; no pkill of any form"
+      missing_evidence:
+        - "The anchor census was rendered from the REACT lane only. The IR is shared and all six derive from the same goldens, so the counts should hold, but THE WORKER MUST RE-MEASURE PER LANE IN A BROWSER rather than inherit this number."
+        - "The reference's own masthead/footer link SET was not enumerated against ours - T001 captured row GEOMETRY, not navigation. The worker's oracle-part-1 pass must state WHICH of the 17 destinations real HN actually has."
+        - "Whether real HN's domain link should be reproduced as an anchor is NOT ruled here; it is a NEWLY SURFACED fidelity gap needing its own card."
+      remaining_blockers:
+        - "S14 /hn-item SHIPS IN FOUR LANES ONLY. Any claim that 'the comments link works' is a FOUR-LANE claim and must be labelled as one."
+        - "17 of 31 /hn stubs WILL REMAIN DEAD AFTER THIS CARD BY DESIGN. They are DOCUMENTED, NOT FIXED, and the final audit must accept that as A MEASURED REFUSAL, not read it as an unclosed defect."
+        - "THE DOMAIN IS A <span> HERE AND AN ANCHOR ON REAL HN. Unrecorded fidelity gap, surfaced by this ruling, unowned."
+        - "PARALLEL SAFETY: the worker card this ruling specifies needs packages/frameworks/{vue,angular}/generated/** and src/emitted/**, WHICH IS THE SAME WRITE SCOPE T003'S EVENTUAL WORKER WILL NEED. THOSE TWO WORKER CARDS ARE NOT DISJOINT AND MUST BE SERIALIZED."
+        - "Inherited and still open: hn.css's stale claim that Angular refuses /hn-item, and the cascade-collision sweep of the other shared sheets."
+      verification_attempts: 1
+      stopped_because: null
   - id: T003
     type: judge
     assignee: Judge
@@ -461,6 +496,108 @@ tasks:
       - "NEVER pkill -f on a broad pattern. TWO FOREIGN PROCESSES ARE ALIVE: node PID 64413 on 5175 and PID 24931 on 5178. Kill by recorded PID only."
       - "Verification fails twice for the same reason."
       - "You are about to change WHAT the apps do. This card changes only what a user can FIND. The five habit updates and the thirteen contact controls must behave exactly as they do today."
+    receipt: null
+
+  - id: T006
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    serialize_against: >-
+      MUST NOT RUN CONCURRENTLY WITH T003'S EVENTUAL WORKER. Both need
+      packages/frameworks/{vue,angular}/generated/** and src/emitted/**. SEPARATE CARDS ARE NOT
+      PROOF OF DISJOINTNESS - T002 flagged this itself.
+    objective: >-
+      WIRE THE ROUTING THAT ALREADY EXISTS, AND LABEL THE 17 LINKS THAT HAVE NOWHERE TO GO.
+    THE_INTENT_IS_ALREADY_EMITTED_ONLY_THE_SINK_IS_MISSING: >-
+      Every stub ALREADY carries event.preventDefault() + onTrace('nav', { to: 'new' }, event).
+      The destination is ALREADY NAMED, LOWERED AND TYPED. The links die at the HOST: a no-op
+      onTrace in all six lanes. REPLACE THE NO-OP with a handler that dispatches through the
+      lane's EXISTING host router - nav to:'home' -> /hn, comments -> /hn-item in the FOUR lanes
+      that ship HnItem. demos/react-official/src/App.jsx states the non-sequitur out loud
+      ('.tsrx has no routing construct, SO this page is not reachable') - CORRECT THAT COMMENT.
+    THE_RESIDUAL_IS_LABELLED_NOT_FIXED: >-
+      17 of 31 /hn stubs have NO DESTINATION AND CANNOT ACQUIRE ONE - each is a separate
+      application. Add ONE on-page note copying the shape of s16-task-board.tsrx's
+      tb-note/tb-notemark/tb-notetext, stating that those links have no destination in this
+      corpus and why, AND that the 12 story titles are REAL urls held by preventDefault.
+    SVELTE_AND_VUE_SHIP_NO_HnItem_AT_ALL: >-
+      S14 is a FOUR-LANE app. Record the verbatim refusal; DO NOT INVENT A ROUTE. Any claim that
+      'the comments link works' IS A FOUR-LANE CLAIM and must be labelled as one.
+    allowed_files:
+      - "packages/compiler/test/fixtures/s13-hn-front.tsrx"
+      - "packages/compiler/test/goldens/s13-hn-front.json"
+      - "packages/compiler/test/enriched-ir.test.ts"
+      - "demos/shared/hn-css/**"
+      - "packages/frameworks/react/scripts/regenerate.ts"
+      - "packages/frameworks/react/generated/**"
+      - "packages/frameworks/react/test/**"
+      - "packages/frameworks/solid/scripts/regenerate.ts"
+      - "packages/frameworks/solid/generated/**"
+      - "packages/frameworks/solid/test/**"
+      - "packages/frameworks/qwik/scripts/regenerate.ts"
+      - "packages/frameworks/qwik/generated/**"
+      - "packages/frameworks/qwik/test/**"
+      - "packages/frameworks/svelte/scripts/regenerate.ts"
+      - "packages/frameworks/svelte/generated/**"
+      - "packages/frameworks/svelte/test/**"
+      - "packages/frameworks/vue/scripts/regenerate.ts"
+      - "packages/frameworks/vue/generated/**"
+      - "packages/frameworks/vue/test/**"
+      - "packages/frameworks/angular/scripts/regenerate.ts"
+      - "packages/frameworks/angular/generated/**"
+      - "packages/frameworks/angular/test/**"
+      - "packages/frameworks/vue/src/gate/index.ts"
+      - "demos/react-official/src/emitted/**"
+      - "demos/solid-official/src/emitted/**"
+      - "demos/qwik/src/emitted/**"
+      - "demos/svelte-official/src/lib/emitted/**"
+      - "demos/vue-official/src/emitted/**"
+      - "demos/angular-official/src/emitted/**"
+      - "demos/react-official/public/**"
+      - "demos/solid-official/public/**"
+      - "demos/qwik/public/**"
+      - "demos/svelte-official/static/**"
+      - "demos/vue-official/public/**"
+      - "demos/angular-official/public/**"
+      - "demos/react-official/src/App.jsx"
+      - "demos/solid-official/src/App.jsx"
+      - "demos/qwik/src/routes/hn/index.tsx"
+      - "demos/qwik/src/routes/hn-item/index.tsx"
+      - "demos/svelte-official/src/routes/hn/+page.svelte"
+      - "demos/svelte-official/src/lib/scenario-props.ts"
+      - "demos/vue-official/src/App.vue"
+      - "demos/vue-official/src/scenario-props.ts"
+      - "demos/angular-official/src/app/hn-page.ts"
+      - "demos/angular-official/src/app/hn-item-page.ts"
+      - "demos/angular-official/src/app/scenario-props.ts"
+      - "docs/goals/frameless-app-fidelity-v1/notes/T006-routing.md"
+    verify:
+      - "ORACLE PART 1: re-capture news.ycombinator.com RENDERED and state feature by feature whether the masthead/footer link SET matches ours, and whether the domain is a link there and a span here. NEVER compare against the other lanes."
+      - "DRIVE IT IN A BROWSER AT HEAD AFTER THE CHANGE. A real mouse click on a 'N comments' link on /hn must LAND on /hn-item in react, solid, qwik and angular - PROVED BY HASHING THE RESPONSE BODY, not by HTTP 200."
+      - "NEGATIVE CONTROL: click three of the 17 destination-less links (#/ask, #/jobs, #/guidelines) and assert THE BODY HASH DOES NOT CHANGE and the URL does not move."
+      - "SVELTE AND VUE: record the emitter's VERBATIM refusal for HnItem and assert NO /hn-item route was invented in either lane. DO NOT ship a link to a page that does not exist."
+      - "RE-MEASURE THE ANCHOR CENSUS PER LANE IN A BROWSER - do not inherit T002's react-only number. Report total anchors, stubs, real, and how many stubs now resolve. THE NUMBER TO MOVE IS 71 STUBS OF 84."
+      - "DERIVATION PROOF: delete every artifact this card rebuilt, ASSERT present-after-delete == 0 BEFORE rebuilding, then rebuild byte-identical. USE A SHELL ARRAY - THIS IS ZSH AND IT DOES NOT WORD-SPLIT, which made T001's first attempt VACUOUSLY TRUE."
+      - "pnpm test at EXACTLY 1 failure / pnpm e2e 6 x 9 / pnpm lint / pnpm check:citations"
+      - "pnpm check: STATE THE EXPECTED RISE IN ADVANCE, then report START and END and attribute every new error line. Baseline 251."
+      - "git diff --exit-code over every artifact this card did not intend to move, PAIRED WITH git status --short. S13 IS THE ONLY s-NUMBERED ARTIFACT THAT MOVES."
+      - "fingerprint the owner's three paths at START and FINISH with `shasum -a 256`, RELATIVE paths, WHOLE OUTPUT LINES: f326d314 / aeb7edc1 / f936e169, 116 files"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to add a routing construct to .tsrx, a new IR node kind, or anything under packages/compiler/src/. THIS RULING EXCLUDED THAT - 17 of 31 stubs have NO DESTINATION and no construct reaches them."
+      - "You are about to add a per-item disclosure or collapse control to /hn. THE REFERENCE DOES NOT HAVE ONE - T001's capture records the front-page set as points/author/age/hide/comments. ADDING IT IS A FIDELITY REGRESSION UNDER THIS BOARD'S OWN ORACLE."
+      - "You are about to invent a /hn-item route in svelte or vue. NEITHER LANE EMITS HnItem AT ALL. Record the verbatim refusal instead."
+      - "You are about to point any of the 17 destination-less links at a page. THEY ARE SEPARATE APPLICATIONS; LABEL THEM, DO NOT FAKE THEM."
+      - "You are about to change href={story.url} on the 12 story titles. THOSE ARE REAL URLS held on the page by a deliberate preventDefault."
+      - "You are about to hand-write anything under generated/ or src/emitted/ that did not come out of a regenerate or copy script. HOST WIRING FILES ARE NOT IN THAT SET and ARE explicitly in scope here - App.jsx, scenario-props.ts and the route wrappers are yours."
+      - "You are about to offer 'the six lanes agree' as evidence of FIDELITY. THIS BOARD'S ORACLE FORBIDS IT."
+      - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH. Hash the body."
+      - "You are about to raise pnpm check without STATING THE AMOUNT IN ADVANCE."
+      - "pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
+      - "NEVER pkill -f on a broad pattern. FOREIGN node PID 64413 holds 5175 and PID 24931 holds 5178."
+      - "Verification fails twice for the same reason."
     receipt: null
 
   - id: T999
