@@ -63,6 +63,29 @@
 		Arial,
 		sans-serif;
 	letter-spacing: normal;
+	/*
+	 * AND THE THIRD SHELL RULE, WHICH TWO CARDS MISSED BECAUSE THEY CHECKED
+	 * RECTS. The same `:root` declaration that carries `text-rendering` also
+	 * carries `font-synthesis: none`, `-webkit-font-smoothing: antialiased` and
+	 * `-moz-osx-font-smoothing: grayscale`. Those change how every glyph on the
+	 * page is RASTERISED and they move NO box, NO text-run width and NONE of the
+	 * thirty-six computed properties a geometry sweep reads - so react, solid and
+	 * vue drew this page with a different rasteriser to qwik, svelte and angular
+	 * while every rect-based check reported six passes.
+	 *
+	 * MEASURED OFF THE SCREENSHOT, which is the only instrument that can see it:
+	 * before this reset, react vs svelte differed on 47344 pixels on /hn, 86266
+	 * on /contacts, 49658 on /board and 17807 on /habits, at up to 185-354 per
+	 * channel-sum, spread across the ENTIRE content area rather than any one
+	 * element. `todomvc-app-css/frameless-supplement.css` had already reset
+	 * `-webkit-font-smoothing` back in the TodoMVC repair, and /todomvc is the
+	 * one page in the shipped set that diffed to ZERO pixels before this block
+	 * existed. The value is `auto` for the same reason every other value here is
+	 * what it is: it is what the three lanes with no scaffold already have.
+	 */
+	-webkit-font-smoothing: auto;
+	-moz-osx-font-smoothing: auto;
+	font-synthesis: initial;
 	text-rendering: auto;
 	color-scheme: light;
 }
@@ -96,6 +119,57 @@ body {
 	font-size: 16px;
 	line-height: 1.5;
 	text-align: left;
+}
+
+/*
+ * AND THE SECOND HALF OF THE SAME REPAIR, WHICH THIS SHEET LACKED UNTIL IT WAS
+ * MEASURED. `contacts.css` records the finding: the create-vite scaffold shared
+ * by react, solid and vue ALSO carries, in its own `index.css`,
+ *
+ *   h1, h2 { font-family: var(--heading); font-weight: 500; color: var(--text-h) }
+ *   h1     { font-size: 56px; letter-spacing: -1.68px; margin: 32px 0 }
+ *   h2     { font-size: 24px; line-height: 118%; letter-spacing: -0.24px; margin: 0 0 8px }
+ *
+ * and a page CLASS that sets `font-size`/`font-weight` does not beat any of the
+ * rest of it.
+ *
+ * WHAT IT COSTS ON THIS PAGE IS COLOUR, NOT GEOMETRY. `contacts.css` already
+ * records WHY `/board` never showed the 20px offset that page did - the crumb
+ * reads `Task`, four characters rather than twelve, and the next measured rect
+ * sits behind a flex spacer. That explanation is CONFIRMED here and it is also
+ * INCOMPLETE. MEASURED at 1440x1000 across all six live lanes: `h1.tb-crumb`
+ * rects are IDENTICAL to the pixel - `312,16,38.84,27` in every lane - and yet
+ * two computed properties still differ, because `.tb-crumb` sets `font-size`,
+ * `font-weight`, `letter-spacing` and `margin` but not these:
+ *
+ *   font-family  system-ui, "Segoe UI", Roboto, sans-serif   (react/solid/vue)
+ *                ui-sans-serif, system-ui, -apple-system,    (qwik/svelte/angular)
+ *   color        rgb(8, 6, 13)                               (react/solid/vue)
+ *                oklch(0.145 0 0)                            (qwik/svelte/angular)
+ *
+ * THE CRUMB IS A DIFFERENT COLOUR IN THREE OF THE SIX LANES, and
+ * `border-top-color` follows it through `currentColor`. The two font stacks
+ * resolve to the same installed face on the measuring machine, so this page
+ * cost ZERO PIXELS while being wrong - which is why the geometry sweep that
+ * caught `/hn` reported six passes here.
+ *
+ * `line-height: inherit` rather than a number: `.tb-crumb` sets no line-height
+ * and takes the unitless `1.5` inherited from `:root` above, which computes to
+ * the same 27px in all six lanes; `inherit` reproduces it exactly where a
+ * literal `1.5` or `normal` would move all six. `font-size` is deliberately NOT
+ * reset - there is no value that is simultaneously the UA default for `h1` and
+ * for `h2`, and a wrong guess would move six lanes rather than fix three.
+ *
+ * Neutralised HERE and never in the three shells, which are shared with S1-S12
+ * and with the nine scenarios `pnpm e2e` compares across six lanes.
+ */
+h1,
+h2 {
+	font-family: inherit;
+	letter-spacing: normal;
+	line-height: inherit;
+	color: inherit;
+	margin: 0;
 }
 
 /*

@@ -40,6 +40,116 @@
  * FRAME
  * ----------------------------------------------------------------------- */
 
+/*
+ * SHELL NEUTRALISATION, AND THIS PAGE IS THE ONE THAT STILL NEEDED IT.
+ *
+ * `hn.css` records the first half and `contacts.css` the second: react, solid
+ * and vue are served by create-vite scaffolds whose `src/index.css` sets
+ *
+ *   :root  { font: 18px/145% system-ui; letter-spacing: 0.18px }
+ *   #root  { width: 1126px; text-align: center; display: flex }
+ *   h1, h2 { font-family: var(--heading); font-weight: 500; color: var(--text-h) }
+ *   h2     { font-size: 24px; line-height: 118%; letter-spacing: -0.24px }
+ *
+ * while qwik, svelte and angular ship no such scaffold. The `.codex` rule
+ * below already took the FRAME out of flow and reset its inherited
+ * `text-align`, and both of those repairs still stand - but they were written
+ * before anyone compared the six lanes property by property, and they close the
+ * container half only.
+ *
+ * MEASURED HERE at 1440x1000 across the five lanes that serve this page, BEFORE
+ * this block existed. `/codex` WAS THE ONLY PAGE IN THE WHOLE SHIPPED SET STILL
+ * DIVERGING: 43 elements differed in computed style, 13 text runs in width and
+ * 4 boxes in rect between react/solid/vue and qwik/svelte. Three distinct
+ * mechanisms, and the middle one is the expensive one:
+ *
+ *   letter-spacing  0.18px vs normal on 33 elements. The `body` rule below
+ *                   sets font-family, font-size and line-height but NOT
+ *                   letter-spacing, so `:root`'s value inherited straight
+ *                   through it. "messages in this thread" measured 151.58px
+ *                   against 147.25px.
+ *
+ *   EVERY ROUNDED CORNER ON THE PAGE, 12.5% TOO LARGE. `--radius` is
+ *                   `0.625rem` and `rem` IS THE ROOT FONT SIZE, so an 18px root
+ *                   turned the whole shadcn radius scale into 11.25 / 9 / 6.75 /
+ *                   15.75 where the other lanes rendered 10 / 8 / 6 / 14. The
+ *                   radius provenance recorded at the top of this file was
+ *                   RIGHT and the page still drew the wrong numbers in three
+ *                   lanes, because the scale is relative and the base was not
+ *                   this sheet's.
+ *
+ *   h2.thread-title line-height 17.7px vs 24px, plus the scaffold's heading
+ *                   font-family and `color: rgb(8, 6, 13)` in place of the
+ *                   token's `oklch(0.145 0 0)`. `.thread-title` sets
+ *                   `font-size` and `letter-spacing`; it does not set the other
+ *                   three, and a class does not beat an element rule it never
+ *                   mentions.
+ *
+ * The `#root`/`#app` block is inert on today's markup - `.codex` is
+ * `position: fixed` - and is written anyway because that is the only thing
+ * standing between the container's 1126px and the next non-fixed element
+ * anyone adds to this page. `font-size` is deliberately NOT reset on `h1, h2`:
+ * no single value is the UA default for both, and every heading here sets its
+ * own.
+ *
+ * Neutralised HERE, in the page-scoped sheet, and NOT in the three shells:
+ * those files are shared with S1-S12 and with the nine three-way scenarios that
+ * `pnpm e2e` compares byte for byte across six lanes.
+ *
+ * `color-scheme` is pinned because the scaffold declares `light dark` and flips
+ * its palette under a dark-mode preference.
+ */
+:root {
+	font: normal 16px/1.5 ui-sans-serif, system-ui, sans-serif;
+	letter-spacing: normal;
+	/*
+	 * AND THE THIRD SHELL RULE, WHICH TWO CARDS MISSED BECAUSE THEY CHECKED
+	 * RECTS. The same `:root` declaration that carries `text-rendering` also
+	 * carries `font-synthesis: none`, `-webkit-font-smoothing: antialiased` and
+	 * `-moz-osx-font-smoothing: grayscale`. Those change how every glyph on the
+	 * page is RASTERISED and they move NO box, NO text-run width and NONE of the
+	 * thirty-six computed properties a geometry sweep reads - so react, solid and
+	 * vue drew this page with a different rasteriser to qwik, svelte and angular
+	 * while every rect-based check reported six passes.
+	 *
+	 * MEASURED OFF THE SCREENSHOT, which is the only instrument that can see it:
+	 * before this reset, react vs svelte differed on 47344 pixels on /hn, 86266
+	 * on /contacts, 49658 on /board and 17807 on /habits, at up to 185-354 per
+	 * channel-sum, spread across the ENTIRE content area rather than any one
+	 * element. `todomvc-app-css/frameless-supplement.css` had already reset
+	 * `-webkit-font-smoothing` back in the TodoMVC repair, and /todomvc is the
+	 * one page in the shipped set that diffed to ZERO pixels before this block
+	 * existed. The value is `auto` for the same reason every other value here is
+	 * what it is: it is what the three lanes with no scaffold already have.
+	 */
+	-webkit-font-smoothing: auto;
+	-moz-osx-font-smoothing: auto;
+	font-synthesis: initial;
+	text-rendering: auto;
+	color-scheme: light;
+}
+
+#root,
+#app {
+	width: 100%;
+	max-width: none;
+	min-height: 0;
+	margin: 0;
+	padding: 0;
+	border: none;
+	display: block;
+	text-align: left;
+}
+
+h1,
+h2 {
+	font-family: inherit;
+	letter-spacing: normal;
+	line-height: inherit;
+	color: inherit;
+	margin: 0;
+}
+
 body {
 	margin: 0;
 	background: var(--background);

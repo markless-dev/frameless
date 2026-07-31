@@ -58,7 +58,7 @@ goal:
       evaporates. If drag refuses and is quietly replaced by click-to-move, the axis goes
       unmeasured while the demo looks complete.
 
-active_task: T008
+active_task: T011
 
 rules:
   - "state.yaml is board truth; goal.md is the charter."
@@ -1541,7 +1541,7 @@ tasks:
   - id: T008
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       Measure whether the create-vite shell divergence T002 found on /hn ALSO affects the three
@@ -1598,8 +1598,126 @@ tasks:
       - "NEVER pkill -f on a broad pattern. TWO FOREIGN PROCESSES ARE ALIVE: node PID 64413 on 5175 and node PID 24931 on 5178."
       - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH. Hash the body."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T008-shell-divergence.md
+      summary: "Swept ALL EIGHT shipped pages in six lanes. THREE OF THIS CARD'S FOUR PREMISES WERE WRONG, AND THE LARGEST DEFECT WAS ONE NOBODY HAD LOOKED FOR. 37/37 lane pairs across 8 pages now diff to ZERO PIXELS, and the lanes that were already correct DID NOT MOVE (verified by per-lane before/after delta). Baselines unmoved."
+      THE_INSTRUMENT_ITSELF_WAS_WRONG_AND_THAT_REFUTES_TWO_EARLIER_CLAIMS: "ALL FOUR EXISTING PAGE SHEETS RESET text-rendering AND LEFT `-webkit-font-smoothing: antialiased` STANDING. It moves NO BOX, NO TEXT-RUN WIDTH and NONE OF 36 COMPUTED PROPERTIES - and react vs svelte differed on 86,266 PIXELS on /contacts. MEASURED BEFORE: /hn 47344, /contacts 86266, /board 49658, /habits 17807, /hn-item 42010 differing pixels. T002's 'six lanes agree TO THE PIXEL' and T006's 'Divergence: NONE' ARE BOTH REFUTED AT THE IMAGE. BOTH CARDS MEASURED RECTS, AND RECTS CANNOT SEE IT."
+      THREE_PREMISES_WRONG_AND_NO_REPAIR_MANUFACTURED: "(1) /todomvc and /todomvc-advanced WERE ALREADY CLEAN - repaired before hn.css existed by demos/shared/todomvc-app-css/frameless-supplement.css, USING A STRONGER :has() TECHNIQUE THAN ANY SHEET SINCE. (2) /hn and /hn-item HAVE NO HEADING ELEMENTS AT ALL, so the T006 h1/h2 rule cannot reach them. (3) /habits and /board diverged at their <h1> by ZERO PIXELS - but BY COLOUR: rgb(8, 6, 13) in react/solid/vue against oklch(0.145 0 0) in qwik/svelte/angular. /codex was the ONLY page moving a box, and its --radius: 0.625rem meant EVERY ROUNDED CORNER WAS 12.5% TOO LARGE in three lanes, because the shell's 18px root is the rem base."
+      THE_CHECKED_CLAIM_IS_SETTLED_AND_THE_SHIPPED_COMMENT_IS_WRONG_ON_THREE_OF_FOUR_ROWS: "A MutationObserver installed BEFORE ANY PAGE SCRIPT measured the hydration instant the card said might be unmeasurable. ALL SIX LANES SERVE `checked` IDENTICALLY; ONLY SVELTE removes it during hydration; solid/qwik/angular perform NO MUTATION AT ALL. IT IS A TWO-WAY SPLIT, NOT FOUR. Exact replacement wording is in section 6.1 of the note; three-way-contract.ts is outside allowed_files so it was NOT edited."
+      IT_MUTATION_TESTED_AND_THE_FIRST_MUTANT_SURVIVED_CORRECTLY: "Changing the font-smoothing VALUE survived - correctly, because a page sheet reaches all six lanes, so the value is a choice and THE PRESENCE is load-bearing. DELETING the three declarations KILLED it at exactly 47,344 differing pixels on /hn, restored byte-identical."
+      changed_files:
+        - demos/shared/hn-css/hn.css
+        - demos/shared/habit-css/habits.css
+        - demos/shared/board-css/board.css
+        - demos/shared/contact-css/contacts.css
+        - demos/shared/shadcn-theme/codex.css
+        - docs/goals/frameless-app-axes-v1/notes/T008-shell-divergence.md
+        - demos/react-official/public/hn-css/hn.css
+        - demos/react-official/public/habit-css/habits.css
+        - demos/react-official/public/board-css/board.css
+        - demos/react-official/public/contact-css/contacts.css
+        - demos/react-official/public/shadcn-theme/codex.css
+        - demos/solid-official/public/hn-css/hn.css
+        - demos/solid-official/public/habit-css/habits.css
+        - demos/solid-official/public/board-css/board.css
+        - demos/solid-official/public/contact-css/contacts.css
+        - demos/solid-official/public/shadcn-theme/codex.css
+        - demos/qwik/public/hn-css/hn.css
+        - demos/qwik/public/habit-css/habits.css
+        - demos/qwik/public/board-css/board.css
+        - demos/qwik/public/contact-css/contacts.css
+        - demos/qwik/public/shadcn-theme/codex.css
+        - demos/svelte-official/static/hn-css/hn.css
+        - demos/svelte-official/static/habit-css/habits.css
+        - demos/svelte-official/static/board-css/board.css
+        - demos/svelte-official/static/contact-css/contacts.css
+        - demos/svelte-official/static/shadcn-theme/codex.css
+        - demos/vue-official/public/hn-css/hn.css
+        - demos/vue-official/public/habit-css/habits.css
+        - demos/vue-official/public/board-css/board.css
+        - demos/vue-official/public/contact-css/contacts.css
+        - demos/vue-official/public/shadcn-theme/codex.css
+        - demos/angular-official/public/hn-css/hn.css
+        - demos/angular-official/public/habit-css/habits.css
+        - demos/angular-official/public/board-css/board.css
+        - demos/angular-official/public/contact-css/contacts.css
+        - demos/angular-official/public/shadcn-theme/codex.css
+      commands:
+        - cmd: "owner fingerprint START"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169 / 116, sorting the whole shasum OUTPUT LINES"
+        - cmd: "pnpm demo (6 lanes; 5175 and 5178 SKIPPED, nothing killed)"
+          status: pass
+          note: "react 5173 solid 5174 qwik 5176 svelte 5177 vue 5179 angular 5180"
+        - cmd: "BEFORE sweep: 43 page/lane pairs, body-hash + rects + 36 computed props + text runs"
+          status: pass
+          note: "8 paths hash DISTINCTLY per lane; /codex 4 boxes 43 styles 13 runs; /habits+/board 1 style element each; rest 0"
+        - cmd: "BEFORE pixel diff (full-page screenshots, canvas)"
+          status: pass
+          note: "REFUTES T002 AND T006: /hn 47344, /contacts 86266, /board 49658, /habits 17807, /hn-item 42010 differing pixels. /todomvc 0"
+        - cmd: "cause probe: -webkit-font-smoothing / font-synthesis per lane"
+          status: pass
+          note: "antialiased+none in react/solid/vue vs auto+auto in qwik/svelte - INVISIBLE to rects and to all 36 properties"
+        - cmd: "repair 5 page-scoped sheets; re-copy to 6 lanes"
+          status: pass
+          note: "30/30 lane copies byte-identical to demos/shared/ source"
+        - cmd: "AFTER pixel diff, qwik dev elements REMOVED BY ID and reported"
+          status: pass
+          note: "37/37 lane pairs across 8 pages: diff 0, maxd 0"
+        - cmd: "AFTER rect/style/run sweep"
+          status: pass
+          note: "35/35 lane pairs: boxes 0, styles 0, runs 0"
+        - cmd: "per-lane BEFORE-vs-AFTER delta"
+          status: pass
+          note: "qwik/svelte/angular UNCHANGED on every page; only react/solid/vue moved, ONTO them"
+        - cmd: "MUTATION 1: change the font-smoothing value"
+          status: pass
+          note: "SURVIVED, CORRECTLY - the presence is load-bearing, not the value"
+        - cmd: "MUTATION 2: delete the three declarations"
+          status: pass
+          note: "KILLED - /hn react vs svelte returned to exactly 47344; restored, shasum matches backup"
+        - cmd: "checked claim: fetch (no JS) + MutationObserver via addInitScript, /s7, six lanes"
+          status: pass
+          note: "ALL SIX SERVE IT IDENTICALLY; only svelte removes it at hydration. TWO-way split, NOT four"
+        - cmd: "pnpm test"
+          status: pass
+          note: "EXACTLY 1 failure (foreign ARM B), 1348 passed"
+        - cmd: "pnpm check"
+          status: pass
+          note: "267 - did not rise"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "PASS - 6 demos x 9 scenarios, all observations equal"
+        - cmd: "pnpm lint / pnpm check:citations"
+          status: pass
+          note: "0 warnings 0 errors on 550 files; citations clean, 602 swept"
+        - cmd: "git diff --exit-code -- packages/ and generated*/src/emitted, PAIRED with git status --short"
+          status: pass
+          note: "exit 0 both; status shows 35 CSS + 1 note and nothing else"
+        - cmd: "demo servers stopped by recorded PID"
+          status: pass
+          note: "foreign PIDs 64413 and 24931 verified ALIVE with original start times; pkill -f NEVER used"
+        - cmd: "owner fingerprint FINISH"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169 / 116 - IDENTICAL to START"
+      deviations:
+        - "SWEPT AND REPAIRED FIVE SHEETS, NOT THREE. contacts.css and hn.css were in the card's 'already fixed' column and BOTH STILL FAILED THE IMAGE on the font-smoothing rule."
+        - "ADDED A PIXEL DIFF AND A PER-ELEMENT COMPUTED-STYLE DIGEST. The card asked for width/line-height/text-align/heading metrics off the rendered page; THAT INSTRUMENT REPORTS SIX PASSES ON /contacts WHILE 86266 PIXELS DIFFER. Rects were not enough and saying so is the finding."
+        - "REMOVED qwik's two dev-only elements BY ID rather than masking their rects. Masking left 2633-11234 residual pixels because #qwik-inspector-info-popup's box-shadow FALLS OUTSIDE ITS OWN RECT. Reported per lane, never silent."
+        - "USED `line-height: inherit` WHERE contacts.css USES A LITERAL 1.5. Measured: .ht-weekday sets 1.2, .tb-crumb inherits a unitless 1.5, .thread-title inherits 24px as a LENGTH. A literal WOULD HAVE MOVED ALL SIX LANES on two of the three pages."
+        - "DID NOT RESET font-size ON h1,h2. No value is the UA default for both, every heading sets its own, and the sweep found ZERO font-size divergence - a guess could only move six lanes rather than fix three."
+        - "MEASURED THE HYDRATION INSTANT the card said might be unmeasurable, with a MutationObserver installed via addInitScript. IT SETTLED THE CLAIM RATHER THAN NARROWING IT BLIND."
+      remaining_blockers:
+        - "THE FOUR NEWER PAGE SHEETS USE BARE :root/#root/h1,h2 SELECTORS AT EQUAL SPECIFICITY TO THE SHELL, SO THEY DEPEND ON LOAD ORDER. frameless-supplement.css deliberately writes html:has(.todoapp) instead and DOCUMENTS WHY - React 19 hoists a <link> into <head> while Vite injects index.css at module-eval, so the scaffold sheet CAN land after ours. It works in all six lanes today, measured. A :has() hardening pass is worth a card."
+        - "demos/react-official/three-way-contract.ts STILL SHIPS THE REFUTED FOUR-WAY `checked` CLAIM. Outside this card's allowed_files. Exact replacement wording is in section 6.1 of the note."
+        - "THE SAME FILE'S `requireForm` REPEATS 'four ways' ABOUT A <select>'s `value`. THAT IS A DIFFERENT PROPERTY ON A DIFFERENT ELEMENT and this card did NOT measure it - IT MUST NOT BE EDITED ON THE STRENGTH OF THE checked FINDING."
+        - "THE `checked` MEASUREMENT IS DEV-SERVER ONLY. pnpm e2e drives PRODUCTION builds; this does not prove the built artifacts behave identically."
+        - "/hn AND /hn-item HAVE NO HEADING ELEMENTS, so nothing on those pages guards the h1/h2 shell rule. THE MOMENT ONE IS ADDED IT WILL DIVERGE."
+        - "Both foreign processes still alive: PID 64413 on 5175, PID 24931 on 5178."
+      stopped_because: null
   - id: T009
     type: judge
     assignee: Judge
@@ -1679,7 +1797,7 @@ tasks:
   - id: T011
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     objective: >-
       AMEND docs/DEFECTS.md entry 15. Its title claims ALL SIX LANES; T005 measured it REACT
@@ -1755,6 +1873,63 @@ tasks:
       - "the worker spec if it should proceed"
     receipt: null
 
+  - id: T013
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      Two things T008 measured but could not touch: correct the REFUTED four-way `checked` claim
+      in demos/react-official/three-way-contract.ts, and harden the four newer page sheets with
+      the :has() technique frameless-supplement.css already uses.
+    THE_REFUTED_CLAIM: >-
+      three-way-contract.ts records that a served `checked` binding 'splits the six lanes FOUR
+      ways'. T008 SETTLED IT with a MutationObserver installed BEFORE ANY PAGE SCRIPT: ALL SIX
+      LANES SERVE IT IDENTICALLY, and ONLY SVELTE removes it during hydration - solid, qwik and
+      angular perform NO MUTATION AT ALL. IT IS A TWO-WAY SPLIT. The comment is wrong on THREE
+      OF ITS FOUR ROWS. Exact replacement wording is in section 6.1 of notes/T008-shell-divergence.md.
+    DO_NOT_OVERREACH_ON_THE_NEIGHBOURING_CLAIM: >-
+      THE SAME FILE'S `requireForm` REPEATS 'four ways' ABOUT A <select>'s `value`. THAT IS A
+      DIFFERENT PROPERTY ON A DIFFERENT ELEMENT AND T008 DID NOT MEASURE IT. Either MEASURE IT
+      THE SAME WAY and correct it on its own evidence, or LEAVE IT ALONE. Editing it on the
+      strength of the checked finding is exactly the over-generalisation this project keeps
+      correcting - DEFECTS.md 12.2 and 15 were both wrong that way.
+    ALSO_RECORD_THE_LIMIT: >-
+      T008's measurement is DEV-SERVER ONLY. pnpm e2e drives PRODUCTION builds, so the corrected
+      comment must say what was measured and what was not.
+    THE_HARDENING: >-
+      hn.css, habits.css, board.css and contacts.css use BARE :root/#root/h1,h2 selectors AT
+      EQUAL SPECIFICITY TO THE SHELL, so they depend on LOAD ORDER. frameless-supplement.css
+      deliberately writes html:has(.todoapp) instead AND DOCUMENTS WHY: React 19 hoists a <link>
+      into <head> while Vite injects index.css at module-eval, SO THE SCAFFOLD SHEET CAN LAND
+      AFTER OURS. It works in all six lanes today, measured - this is hardening, not a bug fix.
+    allowed_files:
+      - "demos/react-official/three-way-contract.ts"
+      - "demos/shared/**"
+      - "demos/react-official/public/**"
+      - "demos/solid-official/public/**"
+      - "demos/qwik/public/**"
+      - "demos/svelte-official/static/**"
+      - "demos/vue-official/public/**"
+      - "demos/angular-official/public/**"
+      - "docs/goals/frameless-app-axes-v1/notes/T013-hardening.md"
+    verify:
+      - "THE CORRECTED COMMENT STATES WHAT WAS MEASURED AND WHAT WAS NOT (dev server, not production builds), and names svelte as the only mutating lane."
+      - "PIXEL-DIFF ALL EIGHT PAGES IN SIX LANES AFTER THE HARDENING - 37 lane pairs must stay at ZERO. RECTS ARE NOT ENOUGH: T008 proved a 86266-pixel divergence invisible to rects and to 36 computed properties."
+      - "MUTATION-TEST THE HARDENING: prove the :has() form still applies when the scaffold sheet is forced to load AFTER the page sheet. A hardening that cannot be shown to survive the case it exists for is decoration."
+      - "pnpm test at exactly 1 / pnpm check not above 267 / pnpm e2e 6 x 9 / lint / check:citations"
+      - "git diff --exit-code -- packages/ and every generated/ + src/emitted/, PAIRED WITH git status --short"
+      - "fingerprint the owner's three paths at START and FINISH - SORT THE WHOLE shasum OUTPUT LINES"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to edit the requireForm `value` claim WITHOUT measuring it yourself."
+      - "You are about to edit a create-vite shell. Page-scoped sheets only - the shells are shared with the nine three-way scenarios."
+      - "You are about to verify with rects alone. PIXEL-DIFF, or the check is the one T002 and T006 both passed while 86266 pixels differed."
+      - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "NEVER pkill -f on a broad pattern. TWO FOREIGN PROCESSES ARE ALIVE: PID 64413 on 5175, PID 24931 on 5178."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
   - id: T999
     type: judge
     assignee: Judge
@@ -1765,6 +1940,7 @@ tasks:
       - "QUOTE EVERY COMPLETION FIELD VERBATIM before ruling - signal, cadence, final_proof AND intake.completion_proof - and STATE THE ORACLE'S OWN PART COUNT before evaluating it. Prior boards caught the PM describing a multi-part oracle with fewer parts than it defines, more than once."
       - "REJECT IF ANY PER-LANE APP CODE WAS HAND-WRITTEN. Verify BY DERIVATION - re-emit from the goldens yourself - not by assertion."
       - "REJECT if an app shipped without a visual comparison against its NAMED reference, or is MISSING FROM pnpm demo."
+      - "REJECT A VISUAL CLAIM MADE FROM RECTS ALONE. T008 measured 86266 differing pixels on /contacts while rects, 36 computed properties and text-run widths ALL reported agreement - refuting T002's and T006's pixel-agreement claims. A pixel diff, or the claim does not stand."
       - "REJECT if a lane is missing WITHOUT a verbatim refusal. A missing lane WITH one is legitimate."
       - "REJECT if any launch command in the report was not actually RUN."
       - "REJECT IF AN AXIS WAS QUIETLY SUBSTITUTED - e.g. click-to-move shipped where drag was the axis, and the axis reported as measured."

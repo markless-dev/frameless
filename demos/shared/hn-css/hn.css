@@ -49,6 +49,29 @@
 	 * flips its palette under a dark-mode preference.
 	 */
 	letter-spacing: normal;
+	/*
+	 * AND THE THIRD SHELL RULE, WHICH TWO CARDS MISSED BECAUSE THEY CHECKED
+	 * RECTS. The same `:root` declaration that carries `text-rendering` also
+	 * carries `font-synthesis: none`, `-webkit-font-smoothing: antialiased` and
+	 * `-moz-osx-font-smoothing: grayscale`. Those change how every glyph on the
+	 * page is RASTERISED and they move NO box, NO text-run width and NONE of the
+	 * thirty-six computed properties a geometry sweep reads - so react, solid and
+	 * vue drew this page with a different rasteriser to qwik, svelte and angular
+	 * while every rect-based check reported six passes.
+	 *
+	 * MEASURED OFF THE SCREENSHOT, which is the only instrument that can see it:
+	 * before this reset, react vs svelte differed on 47344 pixels on /hn, 86266
+	 * on /contacts, 49658 on /board and 17807 on /habits, at up to 185-354 per
+	 * channel-sum, spread across the ENTIRE content area rather than any one
+	 * element. `todomvc-app-css/frameless-supplement.css` had already reset
+	 * `-webkit-font-smoothing` back in the TodoMVC repair, and /todomvc is the
+	 * one page in the shipped set that diffed to ZERO pixels before this block
+	 * existed. The value is `auto` for the same reason every other value here is
+	 * what it is: it is what the three lanes with no scaffold already have.
+	 */
+	-webkit-font-smoothing: auto;
+	-moz-osx-font-smoothing: auto;
+	font-synthesis: initial;
 	text-rendering: auto;
 	color-scheme: light;
 }
