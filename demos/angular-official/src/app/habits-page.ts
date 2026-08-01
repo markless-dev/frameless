@@ -4,9 +4,23 @@ import { HabitTracker } from '../emitted/HabitTracker';
 import { noTrace } from './scenario-props';
 
 /**
- * The /habits route, and the SIXTH of EIGHT wrapper components in this lane.
- * This line used to read "the FOURTH of four", which was true only while this
- * lane was missing S11, S12 and S14. It is missing none of them now.
+ * The /habits route, and one of this lane's wrapper components.
+ *
+ * THIS LINE CARRIED A POSITION AND A DENOMINATOR, AND EVERY VERSION OF BOTH WAS
+ * WRONG - which is why the position is not written here any more and the count is
+ * no longer trusted to a human. It first read "the FOURTH of four", true only
+ * while this lane was missing S11, S12 and S14, and it is missing none of them
+ * now. It was then corrected to "the SIXTH of EIGHT", which CONTRADICTED
+ * `./contacts-page.ts` in the same directory and was also wrong: there are NINE
+ * wrapper components in this lane, because `./async-gate.ts` is one and this
+ * lane's own route table is what says so.
+ *
+ * THE POSITION IS GONE BECAUSE NOTHING CAN RECOMPUTE IT. Those ordinals were
+ * written in ARRIVAL order, which lives in git history rather than on disk, and
+ * route order disagrees with all of them. The COUNT survives, in this one place,
+ * because it is now RECOMPILED from the directory at check time - ruling 11 in
+ * `scripts/check-citations.mjs` - so the day a tenth wrapper lands, this
+ * paragraph goes red instead of going quietly stale.
  *
  * It exists for the reason `./todomvc-page.ts` and `./hn-page.ts` record: to link
  * stylesheets on this route and no other. Putting the `<link>`s in
@@ -16,7 +30,7 @@ import { noTrace } from './scenario-props';
  * for byte across six lanes. All five other lanes put the links in their route
  * wiring for the same reason, so the six pages stay like for like.
  *
- * THIS IS THE SIXTH OF THIS LANE'S EIGHT APPLICATION ROUTES, AND THIS LANE HAS NO
+ * THIS IS ONE OF THIS LANE'S EIGHT APPLICATION ROUTES, AND THIS LANE HAS NO
  * ABSENCES LEFT. This paragraph used to say S15 was "the SECOND corpus application
  * it ships alongside the other five lanes" and then listed "its three absences" IN
  * THE PRESENT TENSE. All three are closed, each by a different card, and none of

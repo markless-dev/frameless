@@ -4,7 +4,7 @@ import { Contacts } from '../emitted/Contacts';
 import { noTrace } from './scenario-props';
 
 /**
- * The /contacts route, and the SIXTH of six wrapper components in this lane.
+ * The /contacts route, and one of this lane's wrapper components.
  *
  * THE EIGHTH APPLICATION - CONTACTS - and THE FORMS CARD. It is the FOURTH
  * scenario in this corpus that all six lanes emit and ship, after S13, S15 and S16,

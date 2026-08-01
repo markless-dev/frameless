@@ -3,7 +3,7 @@ import { Component } from '@angular/core';
 import { HnItem } from '../emitted/HnItem';
 
 /**
- * The /hn-item route, and the FOURTH of the wrapper components in this lane.
+ * The /hn-item route, and one of this lane's wrapper components.
  *
  * It exists for the reason `./todomvc-page.ts` records: to link a stylesheet on
  * this route and no other. Putting the `<link>` in `src/index.html` or in

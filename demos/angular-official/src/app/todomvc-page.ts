@@ -4,7 +4,7 @@ import { TodoMvc } from '../emitted/TodoMvc';
 import { noTrace } from './scenario-props';
 
 /**
- * The /todomvc route, and the SECOND of two wrapper components in this lane.
+ * The /todomvc route, and one of this lane's wrapper components.
  *
  * It exists for exactly one reason: to link the TodoMVC stylesheet on this route
  * and no other. Every other route in `app.routes.ts` mounts its emitted component

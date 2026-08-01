@@ -44,7 +44,7 @@ goal:
       FIXING THE FIVE FINDINGS AND LEAVING THE ORACLE HOLE OPEN. The findings are symptoms; the
       cause is that nothing ever compared a shipped app to the thing it copies.
 
-active_task: T017
+active_task: T018
 
 # ---------------------------------------------------------------------------
 # OWNER DECISIONS - taken from the owner DIRECTLY on 2026-07-31 while T009 ran.
@@ -2301,7 +2301,7 @@ tasks:
   - id: T017
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       BUILD THE GUARD THE OWNER RULED FOR (OD3 "Make it a check") AND PROVE IT ON THE SMALLEST
@@ -2359,6 +2359,135 @@ tasks:
       - "pnpm check rises at all. BASELINE 261, PREDICTED DELTA 0."
       - "pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched. ALL THREE ARE ALREADY DIRTY, YOU DID NOT DO IT, DO NOT `git add -A`."
+      - "NEVER pkill -f. Stop only what you start, BY ITS RECORDED PID."
+      - "Verification fails twice for the same reason."
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T017-count-guard.md
+      summary: "BUILT RULING 11 in scripts/check-citations.mjs, following the T053-T056 precedent's shape. TWO RULES, MATCHING OD3's TWO HALVES: a POSITION among the wrapper components MAY NOT BE STATED AT ALL (arrival order is git history, route order disagrees with every ordinal - recomputing it would GUESS A BASIS), and a COUNT may be stated and is then RECOMPILED FROM THE REAL SOURCE at check time. Five sites lost their number entirely; three keep a count and ALL THREE ARE MACHINE-CHECKED. Proved red against the REAL pre-fix wording IN THE STRONGEST AVAILABLE FORM - the guard was run against UNMODIFIED HEAD prose BEFORE ONE DEMO BYTE MOVED and reported 11 problems across 6 files with ZERO false positives - then per site with byte-identical restores."
+      THE_VALUE_EVERY_CARD_TRUSTED_WAS_ITSELF_STALE: "THE DENOMINATOR IS NINE, NOT EIGHT. async-gate.ts IS a wrapper component and the lane's own source says so THREE TIMES: app.routes.ts calls /s8 'the one route with a WRAPPER component' and /todomvc 'the SECOND OF TWO ROUTES HERE THAT GO THROUGH A WRAPPER', and todomvc-page.ts names it 'the precedent for a wrapper in this lane' - THE ONLY READING UNDER WHICH ITS OWN 'SECOND of two' NUMERATOR IS COHERENT. So habits-page.ts 'SIXTH of EIGHT' - WHICH T015 AND THE CARD BOTH READ AS THE CORRECT VALUE THAT contacts-page.ts CONTRADICTED - WAS ALSO STALE. PM INDEPENDENTLY ENUMERATED FROM THE FILESYSTEM: @Component + an import from ../emitted/ yields async-gate.ts + eight *-page.ts = NINE."
+      WHY_THE_DENOMINATORS_DISAGREED_AT_ALL: "THE POPULATION HAD NEVER BEEN DEFINED ANYWHERE A MACHINE COULD READ IT. Every card that touched this family was comparing hand-written numbers against other hand-written numbers. THE GUARD FIXES THAT IN CODE - it is now the definition."
+      family_eight_own_count: "6 SITES / 6 FILES against the card's 5/5, with the denominator NINE not eight. Also catalogued 4 CORRECT sites deliberately NOT touched (one quoted historical, two correct route counts, one past-tense record) and 4 sites of the same family OUTSIDE allowed_files - app.routes.ts x2, app.config.ts, async-gate.ts - RECORDED IN THE GUARD as ANGULAR_COUNT_NOT_SCANNED, not fixed, not silently skipped."
+      changed_files:
+        - scripts/check-citations.mjs
+        - demos/angular-official/src/app/board-page.ts
+        - demos/angular-official/src/app/contacts-page.ts
+        - demos/angular-official/src/app/habits-page.ts
+        - demos/angular-official/src/app/hn-item-page.ts
+        - demos/angular-official/src/app/hn-page.ts
+        - demos/angular-official/src/app/todomvc-page.ts
+        - docs/goals/frameless-app-fidelity-v1/notes/T017-count-guard.md
+      commands:
+        - cmd: "owner fingerprint START and FINISH, shasum -a 256, sorted whole LINES"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169, 116 files. `diff` of the two sorted 118-line manifests is EMPTY. NEVER TOUCHED"
+        - cmd: "sweep family eight FROM THE FILESYSTEM, own count"
+          status: pass
+          note: "6 sites / 6 files vs 5/5; DENOMINATOR 9 NOT 8. Plus 4 correct sites not touched and 4 out-of-scope sites recorded"
+        - cmd: "GUARD DERIVES, NEVER HARD-CODES - proved by pointing the derivation at a COPIED LANE with a TENTH wrapper and NINTH route"
+          status: pass
+          note: "REAL 9/8; COPY 9/8; COPY+probe 10/9. THE SAME BYTE-FOR-BYTE GREEN habits-page.ts PROSE THEN WENT RED at three sites. No repository byte moved - git status confirmed"
+        - cmd: "RED-CAPABILITY vs the REAL pre-fix wording, in the STRONGEST available form"
+          status: pass
+          note: "Guard run against UNMODIFIED HEAD PROSE BEFORE ANY DEMO EDIT: 11 problems across 6 files, EVERY real stale site named by file:line:column, ZERO FALSE POSITIVES REPO-WIDE"
+        - cmd: "RED-CAPABILITY per site: 8 plant/restore cycles with sha256 BEFORE and AFTER"
+          status: pass
+          note: "6 REAL pre-fix wordings + 1 synthetic route count all EXIT 1 and name the site; the QUOTED negative control EXITS 0. ALL 8 RESTORES BYTE-IDENTICAL (db22a17e/37c4dff7/04ad9638/b767fbfb/02439831/b8c0684a), all restored runs green"
+        - cmd: "NEGATIVE CONTROLS"
+          status: pass
+          note: "Correct counts green. habits-page.ts QUOTED HISTORICAL 'the FOURTH of four' GREEN - and the planted control PROVES THE EXEMPTION DOES THE WORK: the identical sentence UNQUOTED goes RED, QUOTED stays GREEN. Family seven ordinals untouched and unflagged"
+        - cmd: "ANTI-VACUITY: angularCountIntegrityProblems()"
+          status: pass
+          note: "Real scope 12 files (floor 4); an empty dir yields 0 files / 0 wrappers, TRIPPING BOTH FLOORS. Exemptions checked FOR EXISTENCE. Fatal like a citation violation"
+        - cmd: "pnpm check:citations surface BEFORE and AFTER"
+          status: pass
+          note: "4 watched documents / 17 watched source / 610 swept, IDENTICAL both ends. 0.493s -> 0.473s. Ruling 11 is a SECOND DETECTOR over prose ruling 10 already reads, NOT a second sweep"
+        - cmd: "PM INDEPENDENT RE-VERIFICATION"
+          status: pass
+          note: "Enumerated the wrappers from the filesystem: NINE, exactly as claimed. Planted a stale count into habits-page.ts: check-citations EXIT 1. Restored: EXIT 0, digest 04ad9638 matching the worker's reported value"
+        - cmd: "13 EXPLICIT derived paths asserted to exist and be NON-EMPTY, then git diff --exit-code paired with git status --short. SHELL ARRAY, NO WILDCARD PATHSPEC"
+          status: pass
+          note: "13/13 exist, 16-17 files each; diff exit 0"
+        - cmd: "re-run all six regenerate and all six copy-emitted steps"
+          status: pass
+          note: "All twelve exit 0; the 13 paths STILL diff-clean afterwards. THIS CARD DERIVES NOTHING"
+        - cmd: "pnpm check"
+          status: pass
+          note: "START 261, END 261. DELTA 0 as predicted"
+        - cmd: "pnpm test"
+          status: pass
+          note: "EXACTLY 1 failure - the foreign ARM B. 1412 passed / 64 files. The guard's own suite (citations.test.ts) STILL GREEN"
+        - cmd: "pnpm e2e RUN ALONE"
+          status: pass
+          note: "PASS - 'Three-way: 6 demos x 9 scenarios, all observations equal'. 6 x 9 intact"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings / 0 errors over 558 files, re-run after the note"
+      deviations:
+        - "THE CARD'S DENOMINATOR WAS WRONG AND IT DID NOT ADOPT IT. Verify item 1 explicitly invited this ('If the denominator is not 8, say so and prove it'). The guard derives 9 and habits-page.ts was corrected AS A SIXTH STALE SITE."
+        - "SCANNED SCOPE IS THE DIRECTORY MINUS THREE NAMED EXEMPTIONS, not the eight *-page.ts files. The three carry four live sites OUTSIDE allowed_files; scanning them would TURN THE REPOSITORY RED ON FILES THIS CARD CANNOT WRITE TO. Recorded IN THE GUARD with reasons and EXISTENCE-CHECKED - so the successor DELETES THREE ENTRIES and the scan reaches them WITH NO NEW CODE. Scanning the rest of the directory means A NEW WRAPPER PAGE IS COVERED THE DAY IT LANDS."
+        - "POSITION IS FORBIDDEN FOR WRAPPERS AND NOT FOR APPLICATION ROUTES. hn-page.ts records a PAST-TENSE application-route position and this guard has NO INSTRUMENT THAT SEPARATES A DATED RECORD FROM A LIVE CLAIM. Forbidding route positions would demand the 'correction' of A TRUE SENTENCE - the one thing ruling 6 exists to stop. Recorded in the ruling, not glossed."
+        - "The application-route subject had NO REAL STALE VALUE at HEAD - its count was right - so its red branch was planted SYNTHETICALLY. DISCLOSED rather than presented as a real find."
+        - "The quotation exemption is A DELIBERATE DOCUMENTED HOLE: a live stale count can be hidden by quoting it. Written into the ruling, exactly as ruling 9 wrote down its spaced variant. Backticks deliberately do NOT exempt."
+      remaining_blockers:
+        - "FAMILY EIGHT IS NOT FULLY CLOSED AND THE REMAINDER IS ENUMERATED IN THE GUARD: app.routes.ts x2, app.config.ts ('through three wrapper components'), and async-gate.ts, whose header STILL ARGUES THIS LANE IS OTHERWISE 'FREE OF WRAPPERS'. All four measured STALE, all four outside allowed_files. async-gate.ts IS THE FILE THE WHOLE FAMILY FORGOT and should be the successor's first line."
+        - "THE GUARD HAS NO SUITE OF ITS OWN. packages/compiler/test/citations.test.ts is the natural home and is OUTSIDE allowed_files, so ruling 11's red-capability rests on THIS CARD'S RECORDED PROOF rather than on a test that RE-RUNS IN CI. A successor must port the eight plants into that suite BEFORE the guard is trusted across 21 files."
+        - "Family seven (53 sites / 21 files) and family nine (~15 sites) untouched, per OD3's sequencing."
+      stopped_because: null
+  - id: T018
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    objective: >-
+      MAKE THE GUARD'S RED-CAPABILITY RE-RUNNABLE IN CI, AND FINISH FAMILY EIGHT. T017's proof is
+      real but it is A ONE-TIME RECORDED PROOF - nothing re-runs it, so ruling 11 could regress
+      silently and certify the rot it was built to catch. PORT THE EIGHT PLANTS INTO
+      packages/compiler/test/citations.test.ts, then delete the three ANGULAR_COUNT_NOT_SCANNED
+      exemptions and correct the four sites behind them.
+    THIS_MUST_LAND_BEFORE_THE_GUARD_IS_USED_ON_21_FILES: >-
+      T019 will point ruling 11 at family seven, 53 sites across 21 files. AN INSTRUMENT THAT HAS
+      NEVER BEEN RE-TESTED SINCE THE DAY IT WAS WRITTEN IS NOT A SAFE BASIS FOR THAT. T017 named
+      this itself as its own first blocker.
+    THE_FOUR_SITES_THE_GUARD_ALREADY_KNOWS_ABOUT: >-
+      T017 recorded them IN THE GUARD rather than skipping them silently, so the scan reaches them
+      the moment the exemptions are deleted - NO NEW CODE. app.routes.ts x2 ('S8 is the one route
+      with a WRAPPER component'; 'the SECOND OF TWO ROUTES HERE THAT GO THROUGH A WRAPPER'),
+      app.config.ts ('through three wrapper components'), and async-gate.ts, WHOSE HEADER STILL
+      ARGUES THIS LANE IS OTHERWISE 'FREE OF WRAPPERS' WHILE BEING THE NINTH WRAPPER ITSELF.
+      async-gate.ts IS THE FILE THE WHOLE FAMILY FORGOT.
+    allowed_files:
+      - "packages/compiler/test/citations.test.ts"
+      - "scripts/check-citations.mjs"
+      - "demos/angular-official/src/app/app.routes.ts"
+      - "demos/angular-official/src/app/app.config.ts"
+      - "demos/angular-official/src/app/async-gate.ts"
+      - "docs/goals/frameless-app-fidelity-v1/notes/T018-guard-suite.md"
+    verify:
+      - "PORT THE EIGHT PLANTS AS REAL TESTS. Each must construct the stale wording, run the detector, and ASSERT IT FIRES AT THE RIGHT FILE AND LINE - plus the QUOTED-HISTORICAL negative control asserting it does NOT fire. A test that only asserts the guard exits 0 on a clean tree IS VACUOUS AND IS THE THING THIS CARD EXISTS TO PREVENT."
+      - "THE TESTS MUST NOT DEPEND ON REPOSITORY PROSE STAYING STALE. Build fixtures in a temp dir, or drive the exported derivation against a synthetic lane, exactly as T017 proved liveness by copying the lane and adding a tenth wrapper. A test that breaks when a future card fixes a comment IS A TRAP."
+      - "PROVE THE NEW TESTS CAN FAIL: break ruling 11 deliberately - make its detector return no problems - and show the ported tests GOING RED. Then restore and show green. THAT IS THE WHOLE POINT OF THE CARD; report the digest both times."
+      - "DELETE THE THREE ANGULAR_COUNT_NOT_SCANNED EXEMPTIONS and correct the four sites behind them. RE-DERIVE THE WRAPPER COUNT YOURSELF from the filesystem - do NOT copy NINE from this card or from T017's receipt. If it is not 9, say so and prove it."
+      - "SWEEP THE THREE NEWLY-SCANNED FILES FOR THE CLAIM and report your own count against T017's four sites. Eight cards running have undercounted."
+      - "pnpm check:citations must still sweep 4 watched documents / 17 watched source files / 610 files and pass clean. Report BEFORE and AFTER, and report the timing."
+      - "THIS CARD DERIVES NOTHING. git diff --exit-code over 13 EXPLICIT derived paths, EACH ASSERTED TO EXIST AND BE NON-EMPTY FIRST, paired with git status --short. *** NEVER USE A WILDCARD PATHSPEC. *** USE A SHELL ARRAY."
+      - "pnpm check BASELINE 261 PREDICTED DELTA 0, report START and END / pnpm test - NOTE THIS CARD ADDS TESTS, so state the passed count BEFORE and AFTER and it must RISE by exactly the number you added, with failures STILL EXACTLY 1 (the foreign ARM B) / pnpm e2e 6 x 9 RUN ALONE / pnpm lint."
+      - "fingerprint the owner's three dirty paths at START and FINISH with `shasum -a 256`, sorting whole output LINES: f326d314 / aeb7edc1 / f936e169, 116 files."
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to write a test that passes whether or not the guard works. ASSERT THE FIRING SITE, NOT THE EXIT CODE ALONE."
+      - "You are about to write a test that reads REPOSITORY PROSE and would break when a future card corrects it."
+      - "You are about to ship without showing the ported tests GOING RED against a deliberately broken ruling 11."
+      - "You are about to copy the wrapper count from this card instead of DERIVING IT."
+      - "You are about to widen this card to family seven or family nine. T019's and T020's."
+      - "You are about to change WHAT ANY APP DOES. The only behaviour this card may change is THE CHECK'S AND THE TEST SUITE'S."
+      - "You are about to weaken ruling 11 to make a site pass. If a site is genuinely correct, EXEMPT IT BY NAME WITH A REASON, as T017 did - never loosen the detector."
+      - "You are about to rewrite ANY prior receipt or note. PRIOR RECEIPTS ARE HISTORY."
+      - "pnpm check rises at all. BASELINE 261, PREDICTED DELTA 0."
+      - "pnpm test failures exceed exactly 1, or pnpm e2e leaves 6 x 9."
+      - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched. DO NOT `git add -A`."
       - "NEVER pkill -f. Stop only what you start, BY ITS RECORDED PID."
       - "Verification fails twice for the same reason."
     receipt: null

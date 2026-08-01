@@ -4,7 +4,7 @@ import { TaskBoard } from '../emitted/TaskBoard';
 import { noTrace } from './scenario-props';
 
 /**
- * The /board route, and the FIFTH of five wrapper components in this lane.
+ * The /board route, and one of this lane's wrapper components.
  *
  * It exists for the reason `./todomvc-page.ts`, `./hn-page.ts` and
  * `./habits-page.ts` record: to link stylesheets on this route and no other.

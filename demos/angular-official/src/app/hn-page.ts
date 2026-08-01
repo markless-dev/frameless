@@ -5,7 +5,7 @@ import { HnFront } from '../emitted/HnFront';
 import { hnDestination } from './scenario-props';
 
 /**
- * The /hn route, and the THIRD of three wrapper components in this lane.
+ * The /hn route, and one of this lane's wrapper components.
  *
  * It exists for the reason `./todomvc-page.ts` records: to link a stylesheet on
  * this route and no other. Putting the `<link>` in `src/index.html` or in

@@ -968,6 +968,367 @@ export const scanText = (text, label = '<text>') =>
 		.map((citation) => ({ ...citation, ...classify(citation), file: label }))
 		.filter((result) => result.verdict === 'violation');
 
+/**
+ * RULING 11 - A COUNT COPIED OUT OF A TABLE ROTS EXACTLY LIKE A LINE ORDINAL, SO IT
+ * GETS EXACTLY THE SAME TREATMENT. Ruled by the owner on `frameless-app-fidelity-v1`
+ * OD3, verbatim: "Make it a check".
+ *
+ * WHAT WAS MEASURED FIRST. T015 swept NINE families of hand-written counts across
+ * this repository and answered the convergence question with NOT CONVERGING: every
+ * one of them is a number DERIVED FROM A TABLE AT AUTHORING TIME and then written
+ * into prose that nothing recompiles. That is the generator this file already broke
+ * once, for citation ordinals, after four hand-correction cards re-drifted. The
+ * smallest complete family is this one - the angular demo lane's claims about its
+ * own wrapper components - and it had rotted into SELF-CONTRADICTION inside a single
+ * directory: `contacts-page.ts` said "the SIXTH of six wrapper components in this
+ * lane" while `habits-page.ts`, four files away, said "the SIXTH of EIGHT". Same
+ * lane, same subject, same ordinal, different denominators, and NOTHING IN THE TEXT
+ * TO TELL A READER WHICH - the identical failure T048 recorded for the ordinals.
+ *
+ * AND BOTH OF THEM WERE WRONG, WHICH IS WHAT DECIDED THE SHAPE OF THIS RULING. NINE
+ * wrapper components exist in that lane, not six and not eight, because
+ * `./async-gate.ts` is one - and the lane's OWN route table is what says so: "S8 is
+ * the one route with a WRAPPER component", and /todomvc is "the SECOND OF TWO ROUTES
+ * HERE THAT GO THROUGH A WRAPPER". `todomvc-page.ts` names it "the precedent for a
+ * wrapper in this lane". The denominators had drifted apart because THE POPULATION
+ * HAD NEVER BEEN DEFINED ANYWHERE A MACHINE COULD READ IT. So this ruling defines it
+ * in code and derives it, which is the only version of the fix that survives S18.
+ *
+ * TWO RULES, BECAUSE THE OWNER'S RULING HAS TWO HALVES.
+ *
+ *   (1) A POSITION AMONG THE WRAPPER COMPONENTS MAY NOT BE STATED AT ALL. It is the
+ *       half of the claim this repository CANNOT derive. Those ordinals were written
+ *       in ARRIVAL order, which lives in git history and not on disk, and ROUTE order
+ *       - the only order a file can be read for - disagrees with every single one of
+ *       them. A check that recomputed a position would be GUESSING A BASIS and would
+ *       silently rewrite what the author meant, so the position goes and the sentence
+ *       states the fact instead. That is OD3's first half, enforced rather than swept.
+ *
+ *   (2) A COUNT MAY BE STATED, AND THEN IT IS RECOMPILED HERE. Each subject below
+ *       carries a derivation that reads the real source AT CHECK TIME. Nothing in
+ *       this file stores the number: `angularWrapperComponents` enumerates the
+ *       directory and `angularApplicationRoutes` parses the lane's own route table.
+ *       The day a tenth wrapper lands, prose that says nine goes red by itself.
+ *
+ * POSITION IS FORBIDDEN FOR WRAPPERS AND NOT FOR ROUTES, AND THE ASYMMETRY IS A
+ * MEASUREMENT. `hn-page.ts` records "THIS WAS THE THIRD APPLICATION ROUTE THIS LANE
+ * HAD" - past tense, a dated record of the sort ruling 3 protects - and this guard
+ * has no instrument that can tell a past-tense record from a live claim. Forbidding
+ * route positions would therefore demand the "correction" of a true sentence, which
+ * is the one thing ruling 6 was written to stop. Wrapper positions carry no such
+ * survivor, so they are refused outright.
+ *
+ * A QUOTATION IS A RECITATION, NOT A CLAIM - the same reading ruling 6 gives a fenced
+ * block. `habits-page.ts` records what its own first line USED to say, in quotes, and
+ * that sentence is CORRECT AS IT STANDS: it is the evidence of what rotted, and a
+ * check that demanded it be "fixed" would be destroying the record of its own reason
+ * to exist. So a match inside a pair of double quotes is exempt. THE HOLE THAT LEAVES
+ * IS WRITTEN DOWN RATHER THAN GLOSSED, exactly as ruling 9 wrote down its spaced
+ * variant: someone can hide a LIVE stale count by quoting it. BACKTICKS DELIBERATELY
+ * DO NOT EXEMPT - this codebase spells paths and identifiers in them constantly, and
+ * a rule that went blind wherever a backtick appears would be the vacuous pass this
+ * file's header warns about. Both failure modes of the quote lexer - an unpaired
+ * quote, and a pair longer than `QUOTATION_LIMIT` - drop the exemption rather than
+ * widening it, so the instrument fails TOWARDS red.
+ *
+ * THE SCOPE IS THE DIRECTORY MINUS NAMED EXEMPTIONS, NOT A LIST OF FILES - ruling
+ * 10's inversion applied to a much smaller surface. A new wrapper page in that lane
+ * is scanned the day it lands and does not have to be added anywhere.
+ */
+const ANGULAR_LANE_DIR = 'demos/angular-official/src/app';
+
+/**
+ * RULING 11's RECORDED REMAINDER. These three files carry live sites of the SAME
+ * family and are NOT scanned, because `frameless-app-fidelity-v1` T017 - the card
+ * that built this rule - could not write to them. Recording them here rather than in
+ * a note is the point: the exemption is the loud kind, it is checked for existence
+ * below, and the successor card has its population already enumerated.
+ *
+ * NONE OF THEM IS RULED CORRECT. Every one is measured STALE against the derivation
+ * above, so promoting one is a card, not a discovery - the same shape as ruling 2.
+ */
+export const ANGULAR_COUNT_NOT_SCANNED = [
+	{
+		path: `${ANGULAR_LANE_DIR}/app.routes.ts`,
+		reason:
+			'THE ORIGIN OF THE FAMILY AND THE FILE THAT REFUTES IT. It says "S8 is the one ' +
+			'route with a WRAPPER component" and calls /todomvc "the SECOND OF TWO ROUTES HERE ' +
+			'THAT GO THROUGH A WRAPPER"; both were true when written and neither is now. It is ' +
+			'also the evidence that `async-gate.ts` counts, so it cannot be scanned before it ' +
+			'is corrected, and correcting it was outside T017\'s allowed files.',
+	},
+	{
+		path: `${ANGULAR_LANE_DIR}/app.config.ts`,
+		reason:
+			'Carries "instead of through three wrapper components" - a fourth stale denominator ' +
+			'in the same directory, in a sentence about what route `data` binding AVOIDS. ' +
+			'Outside T017\'s allowed files.',
+	},
+	{
+		path: `${ANGULAR_LANE_DIR}/async-gate.ts`,
+		reason:
+			'THE WRAPPER THE DENOMINATORS FORGOT. Its own header says this lane is otherwise ' +
+			'"free of wrappers", which stopped being true the moment /todomvc needed one. It is ' +
+			'counted BY the derivation and exempt FROM the scan, which is the honest state until ' +
+			'a card can write to it. Outside T017\'s allowed files.',
+	},
+];
+
+/**
+ * The prose scanned by ruling 11: every tracked-shaped `.ts` file in that lane except
+ * the recorded remainder. Exported so the suite can assert what it covers rather than
+ * infer it from a green run - the same reason `sweptSourceFiles` is exported.
+ */
+export const angularLaneFiles = (dir = ANGULAR_LANE_DIR) => {
+	const exempt = new Set(ANGULAR_COUNT_NOT_SCANNED.map((entry) => entry.path));
+	return readdirSync(resolve(root, dir), { withFileTypes: true })
+		.filter((entry) => entry.isFile() && entry.name.endsWith('.ts'))
+		.map((entry) => `${dir}/${entry.name}`)
+		.filter((path) => !exempt.has(path))
+		.sort();
+};
+
+/**
+ * THE DERIVATION, AND IT IS A DEFINITION THE PROSE NEVER HAD. A wrapper component in
+ * this lane is a HAND-WRITTEN component that mounts an EMITTED one: `@Component` in
+ * the file and an import out of `../emitted/`. That admits `async-gate.ts` and the
+ * eight `*-page.ts` files, and excludes `app.ts` - the router shell, which declares a
+ * component but mounts no emitted output - and `app.routes.ts`, which imports the
+ * emitted components but declares none. Read at check time, never stored.
+ */
+export const angularWrapperComponents = (dir = ANGULAR_LANE_DIR) =>
+	readdirSync(resolve(root, dir), { withFileTypes: true })
+		.filter((entry) => entry.isFile() && entry.name.endsWith('.ts'))
+		.map((entry) => `${dir}/${entry.name}`)
+		.filter((path) => {
+			const text = readFileSync(resolve(root, path), 'utf8');
+			return /@Component\s*\(/.test(text) && text.includes("from '../emitted/");
+		})
+		.sort();
+
+/**
+ * The lane's APPLICATION routes, parsed out of its own route table: every `path`
+ * entry that is not the three-way contract. `''` is s1 and `s2`-`s9` are the rest of
+ * it - `scripts/e2e.mjs` pins that contract to the literal ['s1'..'s9'] - so what is
+ * left is exactly the corpus applications this lane serves.
+ */
+export const angularApplicationRoutes = (file = `${ANGULAR_LANE_DIR}/app.routes.ts`) =>
+	[...readFileSync(resolve(root, file), 'utf8').matchAll(/\bpath:\s*'([^']*)'/g)]
+		.map((match) => match[1])
+		.filter((path) => path !== '' && !/^s\d+$/.test(path));
+
+const NUMBER_WORDS = new Map([
+	['one', 1],
+	['two', 2],
+	['three', 3],
+	['four', 4],
+	['five', 5],
+	['six', 6],
+	['seven', 7],
+	['eight', 8],
+	['nine', 9],
+	['ten', 10],
+	['eleven', 11],
+	['twelve', 12],
+	['thirteen', 13],
+	['fourteen', 14],
+	['fifteen', 15],
+	['sixteen', 16],
+	['seventeen', 17],
+	['eighteen', 18],
+	['nineteen', 19],
+	['twenty', 20],
+]);
+
+const ORDINAL_WORDS = [
+	'first',
+	'second',
+	'third',
+	'fourth',
+	'fifth',
+	'sixth',
+	'seventh',
+	'eighth',
+	'ninth',
+	'tenth',
+	'eleventh',
+	'twelfth',
+	'thirteenth',
+	'fourteenth',
+	'fifteenth',
+	'sixteenth',
+	'seventeenth',
+	'eighteenth',
+	'nineteenth',
+	'twentieth',
+];
+
+export const COUNTED_ANGULAR_SUBJECTS = [
+	{
+		subject: 'wrapper components',
+		noun: String.raw`wrapper components?`,
+		positionIsDerivable: false,
+		derive: () => angularWrapperComponents(),
+		derivedFrom:
+			'`@Component` declarations in that directory that mount an emitted component',
+	},
+	{
+		subject: 'application routes',
+		noun: String.raw`application routes?`,
+		positionIsDerivable: true,
+		derive: () => angularApplicationRoutes(),
+		derivedFrom: "the non-contract `path` entries in that lane's own app.routes.ts",
+	},
+];
+
+/**
+ * A sentence that wraps across comment lines is ONE sentence, and a per-line detector
+ * would go quiet on exactly the claims an author reflowed. This joins the comment
+ * stream - decoration blanked, newlines turned into spaces - while keeping, for every
+ * character, the line and column it came from, so a match still reports where a reader
+ * will find it. Same idea as `commentsOnly`: preserve the geometry, change the view.
+ */
+const proseStream = (text) => {
+	const characters = [];
+	const positions = [];
+	for (const [index, line] of text.split('\n').entries()) {
+		const decoration = /^\s*(?:\/\*+|\*+\/|\*|\/\/)/.exec(line);
+		for (let column = decoration === null ? 0 : decoration[0].length; column < line.length; column += 1) {
+			characters.push(line[column]);
+			positions.push({ lineNumber: index + 1, column: column + 1 });
+		}
+		characters.push(' ');
+		positions.push({ lineNumber: index + 1, column: line.length + 1 });
+	}
+	return { prose: characters.join(''), positions };
+};
+
+/**
+ * A quotation longer than this is not the recitation the exemption exists for, so the
+ * pair is discarded and the text inside it stays checked. Dropping the span fails
+ * TOWARDS red, which is the direction an exemption must fail in.
+ */
+const QUOTATION_LIMIT = 200;
+
+const quotedSpans = (prose) => {
+	const spans = [];
+	let open = null;
+	for (let index = 0; index < prose.length; index += 1) {
+		if (prose[index] === '\\') {
+			index += 1;
+			continue;
+		}
+		if (prose[index] !== '"') continue;
+		if (open === null) open = index;
+		else {
+			if (index - open <= QUOTATION_LIMIT) spans.push([open, index]);
+			open = null;
+		}
+	}
+	return spans;
+};
+
+/**
+ * RULING 11's detector. Returns violations in the SAME shape the citation detector
+ * does, so `scanRepository` and the reporter treat them identically - one guard, one
+ * output format, one exit code.
+ */
+export const scanAngularCounts = (text, label = '<text>', subjects = COUNTED_ANGULAR_SUBJECTS) => {
+	const { prose, positions } = proseStream(text);
+	const quoted = quotedSpans(prose);
+	const isQuoted = (index) => quoted.some(([from, to]) => index > from && index < to);
+	const at = (index) => positions[index] ?? positions.at(-1) ?? { lineNumber: 1, column: 1 };
+	const violations = [];
+	for (const subject of subjects) {
+		const derived = subject.derive();
+		if (!subject.positionIsDerivable) {
+			const position = new RegExp(
+				String.raw`\b(${ORDINAL_WORDS.join('|')})\s+of\b[^.]{0,40}?\b${subject.noun}\b`,
+				'gi',
+			);
+			for (const match of prose.matchAll(position)) {
+				if (isQuoted(match.index)) continue;
+				violations.push({
+					...at(match.index),
+					file: label,
+					raw: match[0].replaceAll(/\s+/g, ' '),
+					inheritedFrom: null,
+					verdict: 'violation',
+					kind: 'underivable-position',
+					reason:
+						`A position among this lane's ${subject.subject} is NOT DERIVABLE from the ` +
+						'source: the ordinals here were written in arrival order, which is in git ' +
+						'history and not on disk, and route order disagrees with all of them. State ' +
+						'the fact without the position - name the sibling components instead. ' +
+						'RULING 11 in scripts/check-citations.mjs.',
+				});
+			}
+		}
+		const stated = new RegExp(
+			String.raw`\b(${[...NUMBER_WORDS.keys()].join('|')}|\d+)\s+${subject.noun}\b`,
+			'gi',
+		);
+		for (const match of prose.matchAll(stated)) {
+			if (isQuoted(match.index)) continue;
+			const claimed = NUMBER_WORDS.get(match[1].toLowerCase()) ?? Number(match[1]);
+			if (claimed === derived.length) continue;
+			violations.push({
+				...at(match.index),
+				file: label,
+				raw: match[0].replaceAll(/\s+/g, ' '),
+				inheritedFrom: null,
+				verdict: 'violation',
+				kind: 'stale-derived-count',
+				reason:
+					`This prose says ${claimed} ${subject.subject}; the source has ${derived.length}, ` +
+					`derived at check time from ${subject.derivedFrom}: ${derived.join(', ')}. ` +
+					'RULING 11 in scripts/check-citations.mjs.',
+			});
+		}
+	}
+	return violations;
+};
+
+/**
+ * RULING 11's ANTI-VACUITY CHECK. A derivation that quietly returns nothing would let
+ * every count in that lane read green - the exact failure this file's header calls
+ * decoration - so the enumerations have floors, and the recorded remainder is checked
+ * for existence so a renamed file cannot silently unwatch itself.
+ */
+export const angularCountIntegrityProblems = () => {
+	const problems = [];
+	if (!existsSync(resolve(root, ANGULAR_LANE_DIR))) {
+		problems.push(
+			`RULING 11 names ${ANGULAR_LANE_DIR}, which does not exist. The lane moved or the ` +
+				'rule is dead; either way every count in it would pass vacuously.',
+		);
+		return problems;
+	}
+	const scanned = angularLaneFiles();
+	if (scanned.length < 4)
+		problems.push(
+			`RULING 11's scan enumerated only ${scanned.length} file(s) in ${ANGULAR_LANE_DIR}. ` +
+				'That is too few for this lane, so the enumeration broke rather than the lane ' +
+				'shrinking - and every unscanned claim would have passed vacuously.',
+		);
+	for (const entry of ANGULAR_COUNT_NOT_SCANNED)
+		if (!existsSync(resolve(root, entry.path)))
+			problems.push(
+				`ANGULAR_COUNT_NOT_SCANNED names ${entry.path}, which does not exist. Re-rule it: ` +
+					'an exemption that points at nothing is a hole with a reason attached.',
+			);
+	for (const subject of COUNTED_ANGULAR_SUBJECTS) {
+		const derived = subject.derive();
+		if (derived.length < 2)
+			problems.push(
+				`RULING 11's derivation of ${subject.subject} found ${derived.length}, from ` +
+					`${subject.derivedFrom}. A count that recompiles to nothing agrees with ` +
+					'nothing, so every claim about it would read green.',
+			);
+	}
+	return problems;
+};
+
 const listDocsTopLevel = () =>
 	readdirSync(resolve(root, 'docs'), { withFileTypes: true })
 		.filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
@@ -1080,6 +1441,9 @@ export const integrityProblems = () => {
 			);
 	// RULING 8's equivalent for the lanes: a seventh emitter cannot arrive unruled.
 	problems.push(...emitterClassificationProblems(classified));
+	// RULING 11's equivalent for the derived counts: a derivation that returns nothing
+	// is a green run over an unread source.
+	problems.push(...angularCountIntegrityProblems());
 	return problems;
 };
 
@@ -1101,6 +1465,14 @@ export const scanRepository = () => {
 	for (const path of sweptSourceFiles()) {
 		const text = readFileSync(resolve(root, path), 'utf8');
 		violations.push(...scanText(commentsOnly(text), path));
+	}
+	// RULING 11. A SECOND DETECTOR OVER THE SAME PROSE, NOT A SECOND SWEEP: these files
+	// are already inside ruling 10's sweep above and are counted there, so this adds a
+	// question rather than a surface. Same comment lexer, same violation shape, same
+	// reporter, same exit code.
+	for (const path of angularLaneFiles()) {
+		const text = readFileSync(resolve(root, path), 'utf8');
+		violations.push(...scanAngularCounts(commentsOnly(text), path));
 	}
 	return { violations, integrity: integrityProblems() };
 };
@@ -1129,5 +1501,10 @@ if (isMain) {
 		`check-citations: clean over ${WATCHED.length} watched document(s), ` +
 			`${WATCHED_SOURCE.length} watched source file(s) and ${sweptSourceFiles().length} ` +
 			'swept source file(s) (comments only).',
+	);
+	console.log(
+		`check-citations: ruling 11 recompiled ${COUNTED_ANGULAR_SUBJECTS.map(
+			(subject) => `${subject.derive().length} ${subject.subject}`,
+		).join(' and ')} and agreed with the prose in ${angularLaneFiles().length} file(s).`,
 	);
 }
