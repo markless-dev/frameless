@@ -1,14 +1,21 @@
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { describe, expect, test } from 'vitest';
+import { copyFileSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { basename, join, resolve } from 'node:path';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import {
+	ANGULAR_COUNT_NOT_SCANNED,
+	COUNTED_ANGULAR_SUBJECTS,
 	EXCLUDED_FILES,
 	FOREIGN_REPOSITORY_TARGETS,
 	NOT_YET_WATCHED,
 	THIRD_PARTY_TARGETS,
 	WATCHED,
 	WATCHED_SOURCE,
+	angularApplicationRoutes,
+	angularCountIntegrityProblems,
+	angularLaneFiles,
+	angularWrapperComponents,
 	classify,
 	commentsOnly,
 	emitterClassificationProblems,
@@ -16,6 +23,7 @@ import {
 	foreignShadowProblems,
 	integrityProblems,
 	listTrackedSourceFiles,
+	scanAngularCounts,
 	scanRepository,
 	scanText,
 	sweepProblems,
@@ -587,6 +595,396 @@ describe('T053 citation-ordinal guard', () => {
 			expect(
 				findCitations('`packages/compiler/src/schema.ts:266` and `runtime-dom.cjs.js:1515`'),
 			).toHaveLength(2);
+		});
+	});
+
+	/**
+	 * T018 RULING 11 — THE COUNT GUARD, AND THE REASON THIS BLOCK EXISTS AT ALL.
+	 *
+	 * T017 built ruling 11 and proved it red against the six real stale sites it then
+	 * corrected. THAT PROOF WAS REAL AND IT WAS ALSO ONE-TIME: it lived in a note, and
+	 * nothing re-ran it, so the detector could be neutered by a later edit and would
+	 * then certify the very rot it was written to catch — while `scanRepository()`
+	 * carried on reporting a clean tree. Every plant T017 ran by hand is re-run here.
+	 *
+	 * TWO PROPERTIES DECIDE THE SHAPE OF THESE TESTS.
+	 *
+	 *   NOT ONE OF THEM MAY ASSERT ONLY THAT THE GUARD EXITS 0. A green run over a
+	 *   clean tree is exactly what a broken detector also produces. Every plant below
+	 *   asserts the FIRING SITE — file, line and kind — so deleting the detector's body
+	 *   fails them.
+	 *
+	 *   AND NOT ONE OF THEM MAY READ REPOSITORY PROSE. The stale wording is built here
+	 *   as a fixture and the NUMBERS come from a SYNTHETIC LANE in a temp directory, so
+	 *   the day a card corrects a comment in `demos/angular-official`, or adds a tenth
+	 *   wrapper, none of this moves. A suite that goes red when a future card fixes a
+	 *   sentence is a trap, and it is the reason T017 proved liveness against a COPY of
+	 *   the lane rather than against the lane.
+	 */
+	describe('T018 ruling 11 — the count guard is re-proved every run', () => {
+		// A synthetic lane, built once: NINE wrapper components (`@Component` plus an
+		// import out of `../emitted/`), the two decoys the real derivation has to reject,
+		// and a route table carrying the nine-scenario contract plus EIGHT applications.
+		// Those are the same two numbers the real lane derives today, which is what lets
+		// the historical wordings be planted verbatim — but they are OURS, so the real
+		// lane is free to change without touching a line of this file.
+		const lane = mkdtempSync(join(tmpdir(), 'ruling11-lane-'));
+		const wrapper = (name: string) =>
+			writeFileSync(
+				join(lane, name),
+				`import { Component } from '@angular/core';\n` +
+					`import { Thing } from '../emitted/Thing';\n` +
+					`@Component({ selector: 'x', template: '<thing />' })\nexport class X {}\n`,
+			);
+		const routeTable = (applications: string[]) =>
+			`import { Thing } from '../emitted/Thing';\nexport const routes = [\n` +
+			["''", 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9']
+				.map((path) => `  { path: ${path === "''" ? path : `'${path}'`} },\n`)
+				.join('') +
+			applications.map((path) => `  { path: '${path}' },\n`).join('') +
+			'];\n';
+
+		beforeAll(() => {
+			for (const name of [
+				'async-gate.ts',
+				'board-page.ts',
+				'codex-page.ts',
+				'contacts-page.ts',
+				'habits-page.ts',
+				'hn-item-page.ts',
+				'hn-page.ts',
+				'todomvc-advanced-page.ts',
+				'todomvc-page.ts',
+			])
+				wrapper(name);
+			// The two decoys, both of which the real lane contains and the real derivation
+			// must reject: the router shell DECLARES a component but mounts no emitted one,
+			// and the route table IMPORTS emitted components but declares none. If either
+			// slipped in, the derivation would be counting `@Component` or counting imports
+			// rather than counting wrappers.
+			writeFileSync(
+				join(lane, 'app.ts'),
+				`import { Component } from '@angular/core';\n@Component({ selector: 'app-root' })\nexport class App {}\n`,
+			);
+			writeFileSync(
+				join(lane, 'app.routes.ts'),
+				routeTable(['todomvc', 'todomvc-advanced', 'codex', 'hn', 'hn-item', 'habits', 'board', 'contacts']),
+			);
+			writeFileSync(join(lane, 'app.css'), 'body { margin: 0; }\n');
+		});
+		afterAll(() => rmSync(lane, { recursive: true, force: true }));
+
+		// The shipped subjects — shipped nouns, shipped position/count rules — with only
+		// the DERIVATION repointed at the synthetic lane. Overriding the regexes instead
+		// would test a copy of the guard rather than the guard.
+		const subjectsFor = (dir: string) =>
+			COUNTED_ANGULAR_SUBJECTS.map((subject) =>
+				subject.positionIsDerivable
+					? { ...subject, derive: () => angularApplicationRoutes(join(dir, 'app.routes.ts')) }
+					: { ...subject, derive: () => angularWrapperComponents(dir) },
+			);
+
+		/**
+		 * A claim always lands on LINE 6 of this fixture, inside a doc comment, with code
+		 * above and below it — the geometry the real files have. The line is asserted, not
+		 * computed from the fixture, so a detector that reported everything at 1:1 fails.
+		 */
+		const planted = (claim: string) =>
+			[
+				"import { Component } from '@angular/core';",
+				'',
+				"import { TaskBoard } from '../emitted/TaskBoard';",
+				'',
+				'/**',
+				` * The /board route, and ${claim}.`,
+				' *',
+				' * It exists to link stylesheets on this route and no other.',
+				' */',
+				"@Component({ selector: 'app-board', template: '<task-board />' })",
+				'export class BoardPage {}',
+			].join('\n');
+
+		const scanPlant = (claim: string, file: string) =>
+			scanAngularCounts(commentsOnly(planted(claim)), file, subjectsFor(lane));
+
+		const siteOf = (violations: ReturnType<typeof scanAngularCounts>) =>
+			violations.map((v) => `${v.file}:${v.lineNumber} ${v.kind}`);
+
+		/**
+		 * THE SIX REAL SITES. Every wording here is what the file named beside it ACTUALLY
+		 * CONTAINED at `20738a6`, the commit before T017 corrected it — recorded in
+		 * docs/goals/frameless-app-fidelity-v1/notes/T017-count-guard.md. They are fixtures
+		 * now, so correcting the lane again cannot silently disarm them.
+		 */
+		describe('goes red on the six wordings this lane really carried', () => {
+			for (const [name, claim] of [
+				['board-page.ts', 'the FIFTH of five wrapper components in this lane'],
+				['contacts-page.ts', 'the SIXTH of six wrapper components in this lane'],
+				['habits-page.ts', 'the SIXTH of EIGHT wrapper components in this lane'],
+				['hn-page.ts', 'the THIRD of three wrapper components in this lane'],
+				['todomvc-page.ts', 'the SECOND of two wrapper components in this lane'],
+			])
+				test(`${name} — "${claim}"`, () => {
+					const file = `demos/angular-official/src/app/${name}`;
+					const found = scanPlant(claim, file);
+					// BOTH halves of the ruling fire on these: the position cannot be derived at
+					// all, and the denominator disagrees with the nine the lane really has.
+					expect(siteOf(found)).toEqual([
+						`${file}:6 underivable-position`,
+						`${file}:6 stale-derived-count`,
+					]);
+					expect(found[1].reason).toContain('the source has 9');
+				});
+
+			test('a position with NO denominator still fires — the count rule cannot carry it', () => {
+				// `hn-item-page.ts` said "the FOURTH of the wrapper components in this lane".
+				// There is no number to recompile, so only the position rule can catch it, and
+				// a guard that only checked numbers would have read this one as clean.
+				const file = 'demos/angular-official/src/app/hn-item-page.ts';
+				const found = scanPlant('the FOURTH of the wrapper components in this lane', file);
+				expect(siteOf(found)).toEqual([`${file}:6 underivable-position`]);
+				expect(found[0].raw).toBe('FOURTH of the wrapper components');
+			});
+
+			test('a stale APPLICATION-ROUTE count fires, and the position beside it does NOT', () => {
+				// The asymmetry ruling 11 argues for, asserted rather than described: route
+				// POSITIONS are left alone because `hn-page.ts` records a true past-tense one
+				// and no instrument here can tell a dated record from a live claim, while the
+				// route COUNT is recompiled. Both halves are in this one fixture.
+				const file = 'demos/angular-official/src/app/habits-page.ts';
+				const found = scanPlant(
+					'the THIRD of this lane’s SEVEN application routes',
+					file,
+				);
+				expect(siteOf(found)).toEqual([`${file}:6 stale-derived-count`]);
+				expect(found[0].reason).toContain('the source has 8');
+			});
+		});
+
+		/**
+		 * THE NEGATIVE CONTROLS. Each one is a sentence that MUST stay green, and each is
+		 * paired with the near-identical sentence that must not — otherwise a rule that
+		 * simply failed to match anything would pass this block.
+		 */
+		describe('stays green where the sentence is correct', () => {
+			test('THE QUOTED HISTORICAL — and the exemption is what does it, not a missed match', () => {
+				// `habits-page.ts` records what its own first line USED to say. The identical
+				// claim unquoted goes red; quoted it is a recitation and stays green. Asserting
+				// the PAIR is the point: green alone would also be produced by a dead detector.
+				const file = 'demos/angular-official/src/app/habits-page.ts';
+				const historical = 'It first read "the FOURTH of four wrapper components", true only then';
+				expect(scanPlant(historical, file)).toEqual([]);
+				expect(
+					siteOf(scanPlant('It first read the FOURTH of four wrapper components, true only then', file)),
+				).toEqual([`${file}:6 underivable-position`, `${file}:6 stale-derived-count`]);
+			});
+
+			test('a claim wrapped across two comment lines is ONE sentence and is still caught', () => {
+				// The quoted historical in the real file spans a line break, so this geometry
+				// is load-bearing for the control above. A per-line detector goes quiet here.
+				const file = 'demos/angular-official/src/app/habits-page.ts';
+				const wrapped = ['/**', ' * It was corrected to the SIXTH of', ' * EIGHT wrapper components.', ' */'].join('\n');
+				const found = scanAngularCounts(commentsOnly(wrapped), file, subjectsFor(lane));
+				expect(siteOf(found)).toEqual([`${file}:2 underivable-position`, `${file}:3 stale-derived-count`]);
+			});
+
+			test('THE CORRECT COUNTS DO NOT FIRE — nine wrappers and eight routes', () => {
+				const file = 'demos/angular-official/src/app/habits-page.ts';
+				expect(scanPlant('there are NINE wrapper components in this lane', file)).toEqual([]);
+				expect(scanPlant('one of this lane’s EIGHT application routes', file)).toEqual([]);
+			});
+
+			test("T017's REMEDY TEXT must never fire — the guard cannot red-flag its own fix", () => {
+				// Five files now open "one of this lane's wrapper components". If the count rule
+				// ever let its number float away from the noun, that sentence would read as a
+				// claim of ONE and every corrected file would go red. This is the test that
+				// pins the tight spacing, and it is why the blind spot below is a blind spot.
+				const file = 'demos/angular-official/src/app/board-page.ts';
+				expect(scanPlant("one of this lane’s wrapper components", file)).toEqual([]);
+				expect(scanPlant('one of the wrapper components here', file)).toEqual([]);
+			});
+
+			test('family seven is NOT this rule — the six-lane chain stays untouched', () => {
+				// T019 owns those 53 sites. If ruling 11 started firing on them, this card
+				// would have silently widened into another card's population.
+				const file = 'demos/angular-official/src/app/contacts-page.ts';
+				expect(scanPlant('THE EIGHTH APPLICATION, and the FOURTH scenario this lane ships', file)).toEqual([]);
+				expect(scanPlant('THE THIRD CORPUS APPLICATION THIS LANE SHIPS', file)).toEqual([]);
+			});
+		});
+
+		/**
+		 * T018 DELETED THE THREE `ANGULAR_COUNT_NOT_SCANNED` EXEMPTIONS, and found the
+		 * detector reached only TWO of the six stale sites behind them. These pin the
+		 * widening that fixed one of them AND the two holes that remain — recorded as
+		 * failing tests would be, so nobody can mistake them for an oversight.
+		 */
+		describe('the wordings behind the deleted exemptions', () => {
+			test('the whole lane is scanned now, and the exemption list is empty', () => {
+				expect(ANGULAR_COUNT_NOT_SCANNED).toEqual([]);
+				for (const name of ['app.routes.ts', 'app.config.ts', 'async-gate.ts'])
+					expect(angularLaneFiles()).toContain(`demos/angular-official/src/app/${name}`);
+			});
+
+			test('THE BARE NOUN IS CAUGHT — the sentence T017 cited as evidence for NINE', () => {
+				// `app.routes.ts` called /todomvc "the SECOND OF TWO ROUTES HERE THAT GO THROUGH
+				// A WRAPPER" — the sentence whose own numerator proves `async-gate.ts` counts.
+				// At T017's spelling the noun had to be "wrapper component", so the guard could
+				// not see the sentence its own reasoning rested on.
+				const file = 'demos/angular-official/src/app/app.routes.ts';
+				const found = scanPlant('THE SECOND OF TWO ROUTES HERE THAT GO THROUGH A WRAPPER', file);
+				expect(siteOf(found)).toEqual([`${file}:6 underivable-position`]);
+			});
+
+			test('and the widened noun still reads the plain spelling as the same subject', () => {
+				const file = 'demos/angular-official/src/app/app.config.ts';
+				const found = scanPlant('their props instead of through three wrapper components', file);
+				expect(siteOf(found)).toEqual([`${file}:6 stale-derived-count`]);
+				expect(found[0].raw).toBe('three wrapper components');
+			});
+
+			test('RECORDED HOLE 1 — a number attached to ROUTES cannot be read as a number of WRAPPERS', () => {
+				// `app.routes.ts` said "S8 is the one route with a WRAPPER component" and
+				// `async-gate.ts` said "the ONE route in this lane that needs a wrapper component
+				// at all". Both were stale by nine and BOTH ARE INVISIBLE HERE, because the
+				// number attaches to `route`. The widening that would catch them is the one the
+				// remedy-text test above forbids. Corrected by hand; pinned here as a hole.
+				const file = 'demos/angular-official/src/app/app.routes.ts';
+				expect(scanPlant('S8 is the one route with a WRAPPER component', file)).toEqual([]);
+				expect(
+					scanPlant('the ONE route in this lane that needs a wrapper component at all', file),
+				).toEqual([]);
+			});
+
+			test('RECORDED HOLE 2 — a count of ZERO spelled in English is not a number', () => {
+				// `async-gate.ts` said route `data` "is what keeps this lane free of wrappers".
+				// That asserts the count is nought, it was wrong by nine, and there is no
+				// numeral in it for any version of this rule to recompile.
+				const file = 'demos/angular-official/src/app/async-gate.ts';
+				expect(scanPlant('which is what keeps this lane free of wrappers', file)).toEqual([]);
+			});
+		});
+
+		/**
+		 * THE DERIVATION IS LIVE, NOT STORED. T017 proved this by hand against a copied
+		 * lane. Here it is a test: the SAME green prose goes red the moment the SOURCE
+		 * changes underneath it, which a guard carrying its own copy of the number could
+		 * not do — and which is the entire reason OD3 chose a check over a sweep.
+		 */
+		describe('the numbers are recompiled from the source, never stored', () => {
+			test('adding a tenth wrapper and a ninth route turns green prose red', () => {
+				const file = 'demos/angular-official/src/app/habits-page.ts';
+				const prose = planted('there are NINE wrapper components and EIGHT application routes here');
+				expect(scanAngularCounts(commentsOnly(prose), file, subjectsFor(lane))).toEqual([]);
+
+				const grown = mkdtempSync(join(tmpdir(), 'ruling11-grown-'));
+				try {
+					for (const name of readdirSync(lane)) copyFileSync(join(lane, name), join(grown, name));
+					writeFileSync(
+						join(grown, 'settings-page.ts'),
+						`import { Component } from '@angular/core';\nimport { Thing } from '../emitted/Thing';\n@Component({ selector: 'y', template: '' })\nexport class Y {}\n`,
+					);
+					writeFileSync(
+						join(grown, 'app.routes.ts'),
+						routeTable(['todomvc', 'todomvc-advanced', 'codex', 'hn', 'hn-item', 'habits', 'board', 'contacts', 'settings']),
+					);
+					expect(angularWrapperComponents(grown)).toHaveLength(10);
+					expect(angularApplicationRoutes(join(grown, 'app.routes.ts'))).toHaveLength(9);
+					const found = scanAngularCounts(commentsOnly(prose), file, subjectsFor(grown));
+					expect(siteOf(found)).toEqual([
+						`${file}:6 stale-derived-count`,
+						`${file}:6 stale-derived-count`,
+					]);
+					expect(found.map((v) => v.raw)).toEqual(['NINE wrapper components', 'EIGHT application routes']);
+				} finally {
+					rmSync(grown, { recursive: true, force: true });
+				}
+			});
+
+			test('THE DEFINITION IS A DEFINITION — the two decoys the real lane contains are rejected', () => {
+				// A component that mounts nothing emitted is not a wrapper, and a file that
+				// imports emitted components without declaring one is not either. Getting this
+				// wrong is how the denominators drifted in the first place.
+				expect(angularWrapperComponents(lane).map((path) => basename(path))).toEqual([
+					'async-gate.ts',
+					'board-page.ts',
+					'codex-page.ts',
+					'contacts-page.ts',
+					'habits-page.ts',
+					'hn-item-page.ts',
+					'hn-page.ts',
+					'todomvc-advanced-page.ts',
+					'todomvc-page.ts',
+				]);
+				// And the route derivation drops the nine-scenario three-way contract, which is
+				// what `scripts/e2e.mjs` pins to the literal ['s1'..'s9'].
+				expect(angularApplicationRoutes(join(lane, 'app.routes.ts'))).toEqual([
+					'todomvc',
+					'todomvc-advanced',
+					'codex',
+					'hn',
+					'hn-item',
+					'habits',
+					'board',
+					'contacts',
+				]);
+			});
+		});
+
+		/**
+		 * ANTI-VACUITY. Every branch of ruling 11's integrity check is watched FIRING
+		 * here, not merely watched passing — the exemption loop especially, because T018
+		 * emptied the list it walks and a loop over nothing passes forever.
+		 */
+		describe('cannot be emptied without saying so', () => {
+			test('the real lane is clean, and an EMPTIED one is refused three times over', () => {
+				expect(angularCountIntegrityProblems()).toEqual([]);
+				// A lane stripped to a route table with nothing but the three-way contract in
+				// it: no wrapper survives the definition and no application route survives the
+				// filter. Every claim in such a lane would read GREEN against zero, which is
+				// the failure this block exists for.
+				const empty = mkdtempSync(join(tmpdir(), 'ruling11-empty-'));
+				try {
+					writeFileSync(join(empty, 'app.routes.ts'), routeTable([]));
+					const problems = angularCountIntegrityProblems(empty, [], subjectsFor(empty));
+					expect(problems).toHaveLength(3);
+					expect(problems[0]).toContain('enumerated only 1 file(s)');
+					expect(problems[1]).toContain('wrapper components found 0');
+					expect(problems[2]).toContain('application routes found 0');
+				} finally {
+					rmSync(empty, { recursive: true, force: true });
+				}
+			});
+
+			test('a lane that has MOVED is refused rather than passing over nothing', () => {
+				const problems = angularCountIntegrityProblems('demos/angular-official/src/nowhere');
+				expect(problems).toHaveLength(1);
+				expect(problems[0]).toContain('which does not exist');
+			});
+
+			test('AN EXEMPTION POINTING AT NOTHING FIRES — the branch the empty list no longer walks', () => {
+				const problems = angularCountIntegrityProblems(undefined, [
+					{ path: 'demos/angular-official/src/app/renamed-away.ts', reason: 'synthetic' },
+				]);
+				expect(problems).toHaveLength(1);
+				expect(problems[0]).toContain('renamed-away.ts');
+			});
+
+			test('the quotation exemption fails TOWARDS red, in both of its lexer failure modes', () => {
+				// An unpaired quote and an over-long pair both DROP the exemption rather than
+				// widening it. A hole that failed the other way could hide a live stale count
+				// behind one stray `"`.
+				const file = 'demos/angular-official/src/app/habits-page.ts';
+				expect(siteOf(scanPlant('it read "the FOURTH of four wrapper components', file))).toEqual([
+					`${file}:6 underivable-position`,
+					`${file}:6 stale-derived-count`,
+				]);
+				const padded = `"${'x'.repeat(240)} the FOURTH of four wrapper components"`;
+				expect(siteOf(scanPlant(padded, file))).toEqual([
+					`${file}:6 underivable-position`,
+					`${file}:6 stale-derived-count`,
+				]);
+			});
 		});
 	});
 });

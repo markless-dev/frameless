@@ -1033,54 +1033,62 @@ export const scanText = (text, label = '<text>') =>
  *
  * THE SCOPE IS THE DIRECTORY MINUS NAMED EXEMPTIONS, NOT A LIST OF FILES - ruling
  * 10's inversion applied to a much smaller surface. A new wrapper page in that lane
- * is scanned the day it lands and does not have to be added anywhere.
+ * is scanned the day it lands and does not have to be added anywhere. T018 emptied
+ * the exemption list, so the scope is now the whole directory.
+ *
+ * WHAT THIS RULE STILL CANNOT SEE, WRITTEN DOWN RATHER THAN GLOSSED - the same
+ * treatment ruling 9 gave its spaced variant. Both holes were MEASURED by T018 while
+ * correcting the last six sites of this family, and neither can be closed by widening
+ * a regex without breaking something that works:
+ *
+ *   A COUNT OF SOMETHING ELSE THAT IMPLIES A COUNT OF THESE. `async-gate.ts` called
+ *   itself "the ONE route in this lane that needs a wrapper component at all" and the
+ *   route table called /s8 "the one route with a WRAPPER component". The number there
+ *   attaches to ROUTES, not to the noun this subject derives, so the rule reads past
+ *   it. Letting the number float up to 40 characters away from the noun - the licence
+ *   the POSITION rule takes - would fire on "one of this lane's wrapper components",
+ *   which is the exact sentence T017 wrote into five files AS THE FIX. The looser rule
+ *   would therefore red-flag its own remedy, so the tight one stands and the hole is
+ *   recorded.
+ *
+ *   A COUNT OF ZERO SPELLED IN ENGLISH. The same file said route `data` "is what keeps
+ *   this lane free of wrappers". That is a claim that the count is nought, it was false
+ *   by nine, and no number word appears in it at all.
+ *
+ * BOTH SHAPES WERE FOUND BY READING THE FILES, NOT BY RUNNING THE CHECK, which is the
+ * honest statement of what this instrument is: it makes a stated NUMBER re-derivable,
+ * and it does not make prose true.
  */
 const ANGULAR_LANE_DIR = 'demos/angular-official/src/app';
 
 /**
- * RULING 11's RECORDED REMAINDER. These three files carry live sites of the SAME
- * family and are NOT scanned, because `frameless-app-fidelity-v1` T017 - the card
- * that built this rule - could not write to them. Recording them here rather than in
- * a note is the point: the exemption is the loud kind, it is checked for existence
- * below, and the successor card has its population already enumerated.
+ * RULING 11's RECORDED REMAINDER, AND IT IS NOW EMPTY. T017 - the card that built this
+ * rule - could not write to `app.routes.ts`, `app.config.ts` or `async-gate.ts`, so it
+ * recorded all three here rather than skipping them silently. T018 corrected them and
+ * DELETED THE EXEMPTIONS, so the whole lane is scanned and this list is the shape an
+ * exemption list should end in.
  *
- * NONE OF THEM IS RULED CORRECT. Every one is measured STALE against the derivation
- * above, so promoting one is a card, not a discovery - the same shape as ruling 2.
+ * THE LIST STAYS, EMPTY, FOR TWO REASONS. It is the seam a future card re-opens if a
+ * file in that lane has to stop being scanned, and it must then carry a written reason
+ * like every other ruling in this file. And `angularCountIntegrityProblems` still
+ * checks every entry for existence, so an exemption that points at a renamed file can
+ * never silently unwatch it - a check the suite exercises by handing that function a
+ * synthetic entry and watching it fire, because a check that has only ever been seen to
+ * pass over an EMPTY list is decoration.
  */
-export const ANGULAR_COUNT_NOT_SCANNED = [
-	{
-		path: `${ANGULAR_LANE_DIR}/app.routes.ts`,
-		reason:
-			'THE ORIGIN OF THE FAMILY AND THE FILE THAT REFUTES IT. It says "S8 is the one ' +
-			'route with a WRAPPER component" and calls /todomvc "the SECOND OF TWO ROUTES HERE ' +
-			'THAT GO THROUGH A WRAPPER"; both were true when written and neither is now. It is ' +
-			'also the evidence that `async-gate.ts` counts, so it cannot be scanned before it ' +
-			'is corrected, and correcting it was outside T017\'s allowed files.',
-	},
-	{
-		path: `${ANGULAR_LANE_DIR}/app.config.ts`,
-		reason:
-			'Carries "instead of through three wrapper components" - a fourth stale denominator ' +
-			'in the same directory, in a sentence about what route `data` binding AVOIDS. ' +
-			'Outside T017\'s allowed files.',
-	},
-	{
-		path: `${ANGULAR_LANE_DIR}/async-gate.ts`,
-		reason:
-			'THE WRAPPER THE DENOMINATORS FORGOT. Its own header says this lane is otherwise ' +
-			'"free of wrappers", which stopped being true the moment /todomvc needed one. It is ' +
-			'counted BY the derivation and exempt FROM the scan, which is the honest state until ' +
-			'a card can write to it. Outside T017\'s allowed files.',
-	},
-];
+/** @type {{ path: string, reason: string }[]} */
+export const ANGULAR_COUNT_NOT_SCANNED = [];
 
 /**
  * The prose scanned by ruling 11: every tracked-shaped `.ts` file in that lane except
  * the recorded remainder. Exported so the suite can assert what it covers rather than
- * infer it from a green run - the same reason `sweptSourceFiles` is exported.
+ * infer it from a green run - the same reason `sweptSourceFiles` is exported. Takes
+ * both its directory and its exemptions as arguments so the suite can point it at a
+ * synthetic lane instead of at repository prose, which would otherwise make these
+ * tests break the day a card corrects a comment.
  */
-export const angularLaneFiles = (dir = ANGULAR_LANE_DIR) => {
-	const exempt = new Set(ANGULAR_COUNT_NOT_SCANNED.map((entry) => entry.path));
+export const angularLaneFiles = (dir = ANGULAR_LANE_DIR, exemptions = ANGULAR_COUNT_NOT_SCANNED) => {
+	const exempt = new Set(exemptions.map((entry) => entry.path));
 	return readdirSync(resolve(root, dir), { withFileTypes: true })
 		.filter((entry) => entry.isFile() && entry.name.endsWith('.ts'))
 		.map((entry) => `${dir}/${entry.name}`)
@@ -1166,7 +1174,16 @@ const ORDINAL_WORDS = [
 export const COUNTED_ANGULAR_SUBJECTS = [
 	{
 		subject: 'wrapper components',
-		noun: String.raw`wrapper components?`,
+		// THE NOUN IS SPELLED THE WAY THE FAMILY SPELLS IT, WHICH IS A MEASUREMENT AND NOT
+		// A GUESS. T018 deleted the three exemptions above and found that the detector
+		// reached only TWO of the six stale sites behind them, because this lane calls the
+		// same thing "a WRAPPER" as often as "a wrapper component" - "THE SECOND OF TWO
+		// ROUTES HERE THAT GO THROUGH A WRAPPER" is the sentence T017 cited as the EVIDENCE
+		// that the denominator was nine, and the guard could not see it. Admitting the bare
+		// noun catches it and was measured to add ZERO false positives across all 15 files
+		// of the lane. The `components?` half stays optional rather than being dropped: a
+		// bare-word rule alone would not read "wrapper components" as this subject at all.
+		noun: String.raw`wrappers?(?:\s+components?)?`,
 		positionIsDerivable: false,
 		derive: () => angularWrapperComponents(),
 		derivedFrom:
@@ -1294,30 +1311,39 @@ export const scanAngularCounts = (text, label = '<text>', subjects = COUNTED_ANG
  * every count in that lane read green - the exact failure this file's header calls
  * decoration - so the enumerations have floors, and the recorded remainder is checked
  * for existence so a renamed file cannot silently unwatch itself.
+ *
+ * IT TAKES ITS LANE AND ITS EXEMPTIONS AS ARGUMENTS for the reason `foreignShadowProblems`
+ * and `emitterClassificationProblems` do: so the suite can hand it an emptied lane and a
+ * dangling exemption AND WATCH EACH BRANCH FIRE. Since T018 the exemption list is empty,
+ * so its existence loop would otherwise be a branch that never runs over anything.
  */
-export const angularCountIntegrityProblems = () => {
+export const angularCountIntegrityProblems = (
+	dir = ANGULAR_LANE_DIR,
+	exemptions = ANGULAR_COUNT_NOT_SCANNED,
+	subjects = COUNTED_ANGULAR_SUBJECTS,
+) => {
 	const problems = [];
-	if (!existsSync(resolve(root, ANGULAR_LANE_DIR))) {
+	if (!existsSync(resolve(root, dir))) {
 		problems.push(
-			`RULING 11 names ${ANGULAR_LANE_DIR}, which does not exist. The lane moved or the ` +
+			`RULING 11 names ${dir}, which does not exist. The lane moved or the ` +
 				'rule is dead; either way every count in it would pass vacuously.',
 		);
 		return problems;
 	}
-	const scanned = angularLaneFiles();
+	const scanned = angularLaneFiles(dir, exemptions);
 	if (scanned.length < 4)
 		problems.push(
-			`RULING 11's scan enumerated only ${scanned.length} file(s) in ${ANGULAR_LANE_DIR}. ` +
+			`RULING 11's scan enumerated only ${scanned.length} file(s) in ${dir}. ` +
 				'That is too few for this lane, so the enumeration broke rather than the lane ' +
 				'shrinking - and every unscanned claim would have passed vacuously.',
 		);
-	for (const entry of ANGULAR_COUNT_NOT_SCANNED)
+	for (const entry of exemptions)
 		if (!existsSync(resolve(root, entry.path)))
 			problems.push(
 				`ANGULAR_COUNT_NOT_SCANNED names ${entry.path}, which does not exist. Re-rule it: ` +
 					'an exemption that points at nothing is a hole with a reason attached.',
 			);
-	for (const subject of COUNTED_ANGULAR_SUBJECTS) {
+	for (const subject of subjects) {
 		const derived = subject.derive();
 		if (derived.length < 2)
 			problems.push(

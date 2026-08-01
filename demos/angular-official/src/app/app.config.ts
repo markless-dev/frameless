@@ -9,8 +9,16 @@ import { provideClientHydration } from '@angular/platform-browser';
  * to `provideRouter(routes)`. Nothing else moves.
  *
  * That single feature is what lets `app.routes.ts` hand the emitted components
- * their props as route `data` instead of through three wrapper components. It is
- * the only provider this demo adds.
+ * their props as route `data` instead of through wrapper components written only
+ * to pass them on. It is the only provider this demo adds.
+ *
+ * That sentence used to say "instead of through three wrapper components", one of
+ * the stale denominators `frameless-app-fidelity-v1` T017 and T018 closed. The
+ * count is gone rather than corrected: the wrappers it counted are the ones this
+ * provider means NOBODY WROTE, and an absent file cannot be recompiled. The count
+ * of the wrappers that DO exist is stated once, in
+ * `demos/angular-official/src/app/habits-page.ts`, and ruling 11 of
+ * `scripts/check-citations.mjs` re-derives it on every run.
  *
  * `provideClientHydration()` is the scaffold's own, unchanged, and it is
  * deliberately NOT given `withIncrementalHydration()`: incremental hydration

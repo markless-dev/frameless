@@ -27,10 +27,17 @@ import { noTrace, s2Seed, s4Seed, s5Seed, s6Label, s6Seed, s7Seed, s9Seed } from
  *
  * The props travel as static route `data`, bound to the components' `@Input()`s
  * by `withComponentInputBinding()` in `app.config.ts`. That is Angular's own
- * sanctioned way to hand a routed component its inputs, and it is what keeps
- * this lane free of three wrapper components that exist only to spell
+ * sanctioned way to hand a routed component its inputs, and it is what spares
+ * this lane the wrapper components that would otherwise exist only to spell
  * `[label]="'kit'"`. The values themselves are shared with the other five lanes
  * through `./scenario-props`.
+ *
+ * THAT SENTENCE CARRIED A COUNT AND THE COUNT WAS STALE - it said "three wrapper
+ * components", which was the number of routes carrying `data` when it was
+ * written. The count is gone rather than corrected, because the wrappers it
+ * counts DO NOT EXIST and nothing can recompile a number of absent files.
+ * `./habits-page.ts` is where this lane states its wrapper-component count, and
+ * ruling 11 of `scripts/check-citations.mjs` re-derives that one at check time.
  *
  * The emitted components are standalone (the Angular 19+ default), so they are
  * routable directly with no NgModule and no `imports` array.
@@ -71,9 +78,14 @@ export const routes: Routes = [
     component: FormBoard,
     data: { seed: s7Seed, onTrace: noTrace },
   },
-  // S8 is the one route with a WRAPPER component. Its `ready` prop is a promise
-  // the scenario decides when to resolve, so it changes after the route
-  // resolved, and route `data` is static by construction. See `./async-gate`.
+  // S8 GOES THROUGH A WRAPPER COMPONENT. Its `ready` prop is a promise the
+  // scenario decides when to resolve, so it changes after the route resolved,
+  // and route `data` is static by construction. See `./async-gate`.
+  //
+  // This line used to call /s8 "the one route with a WRAPPER component". It was
+  // true until the first stylesheet landed and it is the sentence the whole
+  // family's wrong denominators came from; the count is gone rather than
+  // corrected, for the reason the header records.
   {
     path: 's8',
     component: AsyncGate,
@@ -93,7 +105,12 @@ export const routes: Routes = [
   // all six lanes start from byte-identical data with no host wiring to keep in
   // step. See packages/compiler/test/fixtures/s10-todomvc.tsrx.
   //
-  // AND IT IS THE SECOND OF TWO ROUTES HERE THAT GO THROUGH A WRAPPER. It mounted
+  // AND IT GOES THROUGH A WRAPPER, WHICH IS WHERE THIS LANE'S WRAPPER COUNT
+  // STARTED DRIFTING. This line used to read "the SECOND OF TWO ROUTES HERE THAT
+  // GO THROUGH A WRAPPER" - the position was written in arrival order, which
+  // nothing on disk records, and the denominator was two for exactly as long as
+  // /s8 and this route were the only ones. Both are gone; `./habits-page.ts`
+  // holds the count and ruling 11 recompiles it. It mounted
   // the emitted `TodoMvc` directly until the stylesheet landed; a `<link>` has to
   // be rendered by SOMETHING, and putting it in src/index.html or angular.json's
   // `styles` array would apply todomvc-app-css to all nine three-way scenarios.

@@ -44,7 +44,7 @@ goal:
       FIXING THE FIVE FINDINGS AND LEAVING THE ORACLE HOLE OPEN. The findings are symptoms; the
       cause is that nothing ever compared a shipped app to the thing it copies.
 
-active_task: T018
+active_task: T019
 
 # ---------------------------------------------------------------------------
 # OWNER DECISIONS - taken from the owner DIRECTLY on 2026-07-31 while T009 ran.
@@ -2439,7 +2439,7 @@ tasks:
   - id: T018
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       MAKE THE GUARD'S RED-CAPABILITY RE-RUNNABLE IN CI, AND FINISH FAMILY EIGHT. T017's proof is
@@ -2485,6 +2485,149 @@ tasks:
       - "You are about to change WHAT ANY APP DOES. The only behaviour this card may change is THE CHECK'S AND THE TEST SUITE'S."
       - "You are about to weaken ruling 11 to make a site pass. If a site is genuinely correct, EXEMPT IT BY NAME WITH A REASON, as T017 did - never loosen the detector."
       - "You are about to rewrite ANY prior receipt or note. PRIOR RECEIPTS ARE HISTORY."
+      - "pnpm check rises at all. BASELINE 261, PREDICTED DELTA 0."
+      - "pnpm test failures exceed exactly 1, or pnpm e2e leaves 6 x 9."
+      - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched. DO NOT `git add -A`."
+      - "NEVER pkill -f. Stop only what you start, BY ITS RECORDED PID."
+      - "Verification fails twice for the same reason."
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T018-guard-suite.md
+      summary: "RULING 11'S RED-CAPABILITY NOW RE-RUNS IN CI. 23 tests assert FIRING SITES (file:line:kind) against a SYNTHETIC 9-wrapper/8-route lane in a temp dir with the shipped subjects repointed at it, so NO TEST READS REPOSITORY PROSE and no future prose fix can break them. Two mutations prove the suite is load-bearing: with the detector neutered, pnpm check:citations STILL PASSES CLEAN - IT CERTIFIES THE ROT - while the suite goes RED. Family eight closed: six sites in three files corrected, wrapper count independently re-derived as NINE."
+      THE_BRIEFS_CENTRAL_PREMISE_WAS_FALSE: "'The scan reaches them the moment the exemptions are deleted - NO NEW CODE' holds FOR THE FILES BUT NOT FOR THE SITES. At T017's spelling the detector fired on only TWO OF SIX, AND NEITHER app.routes.ts SITE THE CARD NAMES WAS ONE. The exemptions were never the only thing hiding them - the NOUN PATTERN was."
+      AND_THE_SITE_COUNT_WAS_WRONG_AGAIN: "SIX SITES IN THREE FILES, NOT FOUR. app.routes.ts:31 'free of three wrapper components' SAT INSIDE A RECORDED EXEMPTION UNRECORDED - a stale site inside the very list that was supposed to enumerate them - and async-gate.ts carries TWO distinct stale claims, not one. NINTH CARD RUNNING TO UNDERCOUNT."
+      THE_MUTATION_PROOF_IS_THE_POINT_OF_THIS_CARD: "MUTATION 1, scanAngularCounts returns nothing: digest 45cf338f -> ed33510e, pnpm check:citations STILL EXITS 0 AND PRINTS CLEAN, 13 of 23 new tests RED. MUTATION 2, the count STORED instead of derived: digest 86805b18, the check STILL PRINTS 'recompiled 9 wrapper components' AND PASSES, 3 tests RED. PM INDEPENDENTLY REPRODUCED MUTATION 1 AT HEAD: check:citations exit 0 while the suite reports 13 failed / 66 passed, restore byte-identical at 45cf338f and 79 passed. THE PM'S FIRST ATTEMPT AT THIS WAS ITSELF VACUOUS - its regex targeted `function scanAngularCounts(` which MATCHES ZERO TIMES because the symbol is an EXPORTED ARROW CONST - and it caught that rather than reporting a passing mutation test that never mutated."
+      own_counts: "WRAPPER COUNT INDEPENDENTLY DERIVED AS NINE (@Component + an import from ../emitted/): async-gate + 8 *-page.ts. Application routes 8. ALSO DERIVED THE RATIO NOBODY HAD: of 17 routes, 8 go direct and NINE go through a wrapper. NEWLY-SCANNED FILES: 6 sites / 3 files against the card's 4."
+      changed_files:
+        - scripts/check-citations.mjs
+        - packages/compiler/test/citations.test.ts
+        - demos/angular-official/src/app/app.routes.ts
+        - demos/angular-official/src/app/app.config.ts
+        - demos/angular-official/src/app/async-gate.ts
+        - docs/goals/frameless-app-fidelity-v1/notes/T018-guard-suite.md
+      commands:
+        - cmd: "owner fingerprint START and FINISH, shasum -a 256, sorted whole LINES"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169, 116 files. IDENTICAL both ends. NO git add -A"
+        - cmd: "DERIVE THE WRAPPER COUNT FROM THE FILESYSTEM, not from the card"
+          status: pass
+          note: "NINE, independently reproduced. PM ALSO reproduced it independently in a separate shell"
+        - cmd: "SWEEP the three newly-scanned files, own count vs T017's four"
+          status: pass
+          note: "SIX SITES / 3 FILES against the card's four - THE UNDERCOUNT IS IN THE PM'S BRIEF, NOT IN THIS COMMAND. app.routes.ts:31 was recorded by NO prior card AND SAT INSIDE A RECORDED EXEMPTION; async-gate.ts carries TWO stale claims. ALL SIX CORRECTED"
+        - cmd: "delete the three ANGULAR_COUNT_NOT_SCANNED exemptions"
+          status: pass
+          note: "list now [], KEPT as a reason-bearing seam with a JSDoc type; ruling 11 scope 12 -> 15 lane files"
+        - cmd: "PORT THE EIGHT PLANTS AS REAL TESTS (+15 more), asserting file:line:kind"
+          status: pass
+          note: "23 tests driven off a SYNTHETIC lane in a temp dir. Quoted-historical control PAIRED with its unquoted twin. NO TEST READS REPOSITORY PROSE"
+        - cmd: "MUTATION 1 - scanAngularCounts returns nothing"
+          status: pass
+          note: "45cf338f -> ed33510e. pnpm check:citations STILL CLEAN - CERTIFIES THE ROT; 13 of 23 RED. PM REPRODUCED: exit 0 with 13 failed / 66 passed"
+        - cmd: "MUTATION 2 - the count STORED instead of derived"
+          status: pass
+          note: "86805b18. The check STILL PRINTS 'recompiled 9 wrapper components' and PASSES; 3 tests RED. Restored byte-identical 45cf338f, green"
+        - cmd: "pnpm check:citations BEFORE and AFTER with timing"
+          status: pass
+          note: "4 documents / 17 watched source / 610 swept BOTH ENDS. 0.461s -> 0.463s. Ruling 11 files 12 -> 15"
+        - cmd: "13 EXPLICIT derived paths, existence-and-non-empty asserted, git diff --exit-code paired with git status --short, SHELL ARRAY, NO WILDCARD"
+          status: pass
+          note: "13/13 exist, diff exit 0 - BEFORE AND AFTER e2e re-ran the six regenerate and six copy-emitted steps. THIS CARD DERIVED NOTHING"
+        - cmd: "pnpm check"
+          status: pass
+          note: "START 261, END 261. DELTA 0 as predicted"
+        - cmd: "pnpm test"
+          status: pass
+          note: "1412 -> 1435 passed, A RISE OF EXACTLY 23 = the tests added. Failures STILL EXACTLY 1 (foreign ARM B)"
+        - cmd: "pnpm e2e RUN ALONE"
+          status: pass
+          note: "PASS, 'Three-way: 6 demos x 9 scenarios, all observations equal'"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 558 files"
+      deviations:
+        - "WIDENED ruling 11's wrapper noun to `wrappers?(?:\\s+components?)?`. NOT ASKED FOR, but 3 OF THE 4 NAMED SITES WERE INVISIBLE TO THE DETECTOR, INCLUDING THE ONE T017 CITED AS ITS EVIDENCE FOR NINE. Measured ZERO new findings across all 15 lane files before any prose moved. A STRENGTHENING, NEVER A LOOSENING - no site was made to pass."
+        - "THE WIDENED RULE WENT RED ON ITS OWN REPLACEMENT SENTENCE ('the one wrapper count this lane states'). IT CHANGED ITS PROSE, NOT THE RULE. Recorded because it is the strongest evidence the widening is tight."
+        - "Parametrized angularLaneFiles(dir, exemptions) and angularCountIntegrityProblems(dir, exemptions, subjects) following the file's OWN precedent, so the suite drives a synthetic lane. WITHOUT THIS the exemption-existence branch loops over an empty list forever."
+        - "Kept ANGULAR_COUNT_NOT_SCANNED as an EXPORTED EMPTY ARRAY with a JSDoc type rather than deleting the symbol: it is THE SEAM A FUTURE CARD RE-OPENS, and the untyped literal would infer never[] and COST pnpm check ERRORS."
+        - "Corrected SIX sites where the card said four, and SPLIT async-gate.ts's header into its two distinct stale claims."
+      remaining_blockers:
+        - "A STALE COUNT LEFT DELIBERATELY IN A FILE IT EDITED: app.routes.ts:25 says 'the five components below are frameless-emitted'; THERE ARE EIGHT ../emitted/ IMPORTS. It counts EMITTED COMPONENTS, not wrappers, so IT IS NOT FAMILY EIGHT - fixing it would widen into another card's population and would PUT AN UNDERIVED NUMBER BACK INTO PROSE. Recorded, untouched. A TENTH FAMILY, AND THE PM MUST ROUTE IT."
+        - "HOLE 1 IN RULING 11 - a number attached to ROUTES ('the one route with a WRAPPER component') is UNREADABLE by the detector. The widening that would catch it ALSO FIRES on 'one of this lane's wrapper components', which is T017's own remedy text in five files. PINNED AS A CHARACTERIZATION TEST."
+        - "HOLE 2 - A COUNT OF ZERO IN ENGLISH ('keeps this lane free of wrappers') CONTAINS NO NUMERAL. PINNED AS A CHARACTERIZATION TEST."
+        - "BOTH HOLES WERE FOUND BY READING THE FILES, NOT BY RUNNING THE CHECK. T019 MUST NOT ASSUME RULING 11 SEES EVERY SITE OF FAMILY SEVEN'S 53 - IT SEES STATED NUMBERS ADJACENT TO A KNOWN NOUN, AND NOTHING ELSE."
+      stopped_because: null
+  - id: T019
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    objective: >-
+      POINT THE NOW-PROVEN INSTRUMENT AT FAMILY SEVEN - the six-lane ordinal chain, T015's 53
+      sites across 21 files - AND CLOSE IT IN ONE CARD ACROSS THE WHOLE POPULATION, demo layer
+      AND emitter layer together. T015 blocked rather than half-close it; its scope is now wide
+      enough that it cannot be half-closed.
+    THE_INSTRUMENT_IS_READY_AND_ITS_LIMITS_ARE_KNOWN: >-
+      Ruling 11 is red-capable AND ITS RED-CAPABILITY NOW RE-RUNS IN CI - 23 tests, and two
+      mutations that leave pnpm check:citations PASSING CLEAN while the suite goes red. BUT T018
+      IS EMPHATIC: RULING 11 SEES STATED NUMBERS ADJACENT TO A KNOWN NOUN, AND NOTHING ELSE. It
+      does NOT see counts attached to routes, and it does NOT see A COUNT OF ZERO IN ENGLISH.
+      DO NOT ASSUME IT SEES ALL 53. SWEEP BY READING, THEN GUARD WHAT IS GUARDABLE.
+    THE_SHAPE_OF_THE_FIX_IS_OD3s_TWO_HALVES: >-
+      (1) PREFER REMOVING THE FRAGILE POSITION - name the lanes or scenarios rather than the
+      ordinal - because arrival order is git history and no check can recompute it. (2) Where a
+      count is genuinely load-bearing, EXTEND RULING 11 WITH A NEW SUBJECT that RECOMPILES IT from
+      the real SCENARIOS/DEMOS tables, and PORT ITS PLANTS INTO citations.test.ts IN THE SAME
+      CARD - T018 proved that an unrepeated proof is worth little.
+    allowed_files:
+      - "scripts/check-citations.mjs"
+      - "packages/compiler/test/citations.test.ts"
+      - "demos/angular-official/src/app/contacts-page.ts"
+      - "demos/angular-official/src/app/board-page.ts"
+      - "demos/angular-official/src/app/habits-page.ts"
+      - "demos/angular-official/src/app/app.routes.ts"
+      - "demos/qwik/src/routes/board/index.tsx"
+      - "demos/qwik/src/routes/contacts/index.tsx"
+      - "demos/qwik/src/routes/habits/index.tsx"
+      - "demos/qwik/src/routes/hn/index.tsx"
+      - "demos/react-official/src/App.jsx"
+      - "demos/solid-official/src/App.jsx"
+      - "demos/svelte-official/src/routes/board/+page.svelte"
+      - "demos/svelte-official/src/routes/contacts/+page.svelte"
+      - "demos/svelte-official/src/routes/habits/+page.svelte"
+      - "demos/svelte-official/src/routes/hn/+page.svelte"
+      - "demos/vue-official/src/App.vue"
+      - "packages/frameworks/react/scripts/regenerate.ts"
+      - "packages/frameworks/solid/scripts/regenerate.ts"
+      - "packages/frameworks/qwik/scripts/regenerate.ts"
+      - "packages/frameworks/svelte/scripts/regenerate.ts"
+      - "packages/frameworks/vue/scripts/regenerate.ts"
+      - "packages/frameworks/angular/scripts/regenerate.ts"
+      - "packages/frameworks/react/test/size.test.ts"
+      - "docs/goals/frameless-app-fidelity-v1/notes/T019-family-seven.md"
+    verify:
+      - "SWEEP BY READING, NOT BY RUNNING THE CHECK, AND REPORT YOUR OWN COUNT AGAINST T015's 53 SITES / 21 FILES. NINE CARDS RUNNING HAVE UNDERCOUNTED - T018 found six where its card said four, and one of them SAT INSIDE THE VERY EXEMPTION LIST MEANT TO ENUMERATE THEM. If you find more, THAT IS THE EXPECTED RESULT."
+      - "DERIVE THE ORDINALS YOURSELF from the real SCENARIOS/DEMOS tables in scripts/demo.mjs. DO NOT copy the chain from this card, from T012's receipt or from T015's. State the derived list."
+      - "THE EMITTER LAYER IS THE ORIGIN, NOT AN AFTERTHOUGHT: T015 measured that the demo wording is PARAPHRASED FROM the six scripts/regenerate.ts tables. CORRECT THE ORIGIN OR THE ROT RE-PROPAGATES."
+      - "ANY NEW RULING-11 SUBJECT MUST DERIVE FROM THE REAL TABLES AND SHIP WITH ITS PLANTS AS TESTS IN THE SAME CARD, asserting file:line:kind against a SYNTHETIC source - never against repository prose. Prove it by MUTATION: break the new subject and show the tests RED while pnpm check:citations still PASSES CLEAN. Report digests."
+      - "SAY PER SITE which of OD3's two halves you applied - position removed, or count guarded - and why."
+      - "THIS CARD DERIVES NOTHING. git diff --exit-code over 13 EXPLICIT derived paths, EACH ASSERTED TO EXIST AND BE NON-EMPTY FIRST, paired with git status --short. *** NEVER USE A WILDCARD PATHSPEC. *** Re-run all six regenerate AND all six copy-emitted steps and show the trees STILL clean - THIS CARD EDITS THE REGENERATE SCRIPTS THEMSELVES, so that proof is load-bearing here in a way it was not before. USE A SHELL ARRAY."
+      - "pnpm check:citations must still sweep 4 watched documents / 17 watched source files / 610 files. Report BEFORE and AFTER."
+      - "pnpm check BASELINE 261 PREDICTED DELTA 0, START and END / pnpm test - IF YOU ADD TESTS, state passed BEFORE and AFTER and it must rise by exactly that many, failures STILL EXACTLY 1 / pnpm e2e 6 x 9 RUN ALONE / pnpm lint."
+      - "fingerprint the owner's three dirty paths at START and FINISH with `shasum -a 256`, sorting whole output LINES: f326d314 / aeb7edc1 / f936e169, 116 files."
+    stop_if:
+      - "Need files outside allowed_files. IF THE POPULATION LEAKS OUT AGAIN, BLOCK AND SAY SO - T015 did exactly that and it was the right call."
+      - "You are about to half-close this population - correcting some lanes and leaving others. THAT IS WHY THIS SCOPE IS 24 FILES."
+      - "You are about to ASSUME RULING 11 SEES A SITE. It sees STATED NUMBERS ADJACENT TO A KNOWN NOUN AND NOTHING ELSE - not route-attached counts, not a count of zero in English."
+      - "You are about to write an ordinal YOU DID NOT DERIVE FROM THE REAL TABLES."
+      - "You are about to add a ruling-11 subject WITHOUT porting its plants into citations.test.ts IN THIS CARD."
+      - "You are about to weaken an existing ruling to make a site pass. EXEMPT BY NAME WITH A REASON, never loosen the detector."
+      - "You are about to 'correct' a QUOTED HISTORICAL or a PAST-TENSE DATED RECORD. Both are correct as they stand and T017 and T018 both had to rule on them."
+      - "You are about to change WHAT ANY APP OR EMITTER DOES. T019 changes only the record and the check."
+      - "You are about to edit a .tsrx fixture. NONE IS IN SCOPE, and a byte-length change there moves the checked-in golden while the derivation proof is STRUCTURALLY BLIND to it."
+      - "You are about to touch app.routes.ts:25 'the five components below are frameless-emitted'. THERE ARE EIGHT, IT IS A TENTH FAMILY, AND IT IS NOT YOURS."
       - "pnpm check rises at all. BASELINE 261, PREDICTED DELTA 0."
       - "pnpm test failures exceed exactly 1, or pnpm e2e leaves 6 x 9."
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched. DO NOT `git add -A`."
