@@ -44,7 +44,7 @@ goal:
       FIXING THE FIVE FINDINGS AND LEAVING THE ORACLE HOLE OPEN. The findings are symptoms; the
       cause is that nothing ever compared a shipped app to the thing it copies.
 
-active_task: T016
+active_task: T017
 
 # ---------------------------------------------------------------------------
 # OWNER DECISIONS - taken from the owner DIRECTLY on 2026-07-31 while T009 ran.
@@ -86,6 +86,31 @@ owner_decisions:
       THIS CHANGES ONE STRING IN ONE FIXTURE AND IS RE-EMITTED TO SIX LANES. It is the FIRST
       card on this board permitted to change WHAT AN APP DOES since T005. It does not license
       any other behavioural edit.
+
+  - id: OD3
+    subject: "Nine families of stale hand-written counts - how to fix the generator, not the symptoms"
+    asked: >-
+      T015 refused to half-close the seventh population and answered the convergence question:
+      NOT CONVERGING. Nine families share ONE generator - a count derived from a table at
+      authoring time and hand-written into prose no check recompiles. Keep hand-sweeping
+      (~73+ sites, ~30 files, and it rots again at S18); MAKE IT A CHECK; accept a recorded gap;
+      or close the demo layer only?
+    owner_verbatim: "Make it a check"
+    ruling: >-
+      MAKE IT A CHECK. Rewrite the claims to STATE THE FACT WITHOUT THE FRAGILE POSITION - name
+      the lanes, not the ordinal - and extend the guard to RECOMPILE genuinely load-bearing
+      counts. This is the fix THIS REPO ALREADY APPLIED to citation line ordinals at
+      scripts/check-citations.mjs after four hand-correction cards re-drifted. It is the only
+      path on which S18 does not reopen all nine families.
+    scope_warning: >-
+      THIS IS THE FIRST CARD ON THIS BOARD PERMITTED TO CHANGE WHAT A CHECK DOES. Every record
+      card since T008 has been prose-only. A guard that is not PROVEN RED-CAPABLE against REAL
+      stale sites is worse than no guard, because it certifies the rot.
+    sequencing: >-
+      PROVE THE MECHANISM ON THE SMALLEST COMPLETE FAMILY FIRST (T017, family eight, 5 sites in 5
+      files), THEN apply it to the large ones (family seven, 53 sites/21 files; family nine, ~15
+      sites). Building the guard and adopting it nowhere would leave it unproven; adopting it
+      across 21 files before it is proven would risk 21 files on an unvalidated instrument.
 
 # ---------------------------------------------------------------------------
 # KNOWN WORKING-TREE DIRT - NOT OURS, DO NOT "CLEAN UP", DO NOT `git add -A`.
@@ -2245,7 +2270,7 @@ tasks:
   - id: T016
     type: pm
     assignee: PM
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       PUT THE STRUCTURAL DECISION TO THE OWNER. T015 refused to half-close the seventh population
@@ -2265,4 +2290,75 @@ tasks:
     expected_output:
       - "the owner's ruling, recorded verbatim in owner_decisions as OD3"
       - "the next card, scoped to whatever the owner chose"
+    receipt:
+      result: done
+      harness: claude-code
+      summary: "OWNER RULED: 'Make it a check'. Recorded VERBATIM as OD3. The three paths were put with T015's measured costs - 53 sites/21 files for family seven alone, a confirmed eighth, a partly-open ninth - and the owner chose the durable fix over hand-sweeping. T017 queued and SEQUENCED PER OD3: prove the mechanism on the SMALLEST COMPLETE family first."
+      decision: "make the count a check; state the fact without the fragile position where prose allows"
+      spawned_tasks:
+        - T017
+
+  - id: T017
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    objective: >-
+      BUILD THE GUARD THE OWNER RULED FOR (OD3 "Make it a check") AND PROVE IT ON THE SMALLEST
+      COMPLETE FAMILY, END TO END. The guard must RECOMPILE a load-bearing count from the real
+      table and FAIL when prose disagrees. Adopt it across ALL of family eight - the angular
+      wrapper denominators - so the mechanism is proven to CLOSE A WHOLE POPULATION, not just to
+      exist.
+    THE_OWNER_RULED_THE_SHAPE_NOT_JUST_THE_TASK: >-
+      OD3 verbatim: "Make it a check". Two halves, BOTH REQUIRED. (1) STATE THE FACT WITHOUT THE
+      FRAGILE POSITION where the prose allows it - name the lanes, not the ordinal. (2) Where a
+      count IS load-bearing and must stay, MAKE IT MACHINE-CHECKED against the real table. THIS
+      REPO ALREADY DID EXACTLY THIS ONCE, at scripts/check-citations.mjs, after four
+      hand-correction cards re-drifted on citation line ordinals. FOLLOW THAT PRECEDENT'S SHAPE.
+    A_GUARD_THAT_IS_NOT_PROVEN_RED_CAPABLE_IS_WORSE_THAN_NO_GUARD: >-
+      It CERTIFIES THE ROT. Your red-capability proof must plant a REAL stale value - the exact
+      wording that was live at HEAD before your fix - and show the guard FAILING on it, then
+      restore BYTE-IDENTICALLY and show it passing. Report the digest both times.
+    FAMILY_EIGHT_MEASURED_BY_T015: >-
+      'the Nth of M wrapper components in this lane' in demos/angular-official/src/app/*-page.ts.
+      EIGHT wrappers exist. FIVE denominators are stale ("of two", "of three", "of five",
+      "of six"), and contacts-page.ts "SIXTH of six" CONTRADICTS habits-page.ts "SIXTH of EIGHT"
+      IN THE SAME DIRECTORY. 5 sites / 5 files. VERIFY THAT COUNT YOURSELF - seven cards running
+      have undercounted, and T015's own sweep found 3.5x what its predecessor named.
+    allowed_files:
+      - "scripts/check-citations.mjs"
+      - "demos/angular-official/src/app/board-page.ts"
+      - "demos/angular-official/src/app/contacts-page.ts"
+      - "demos/angular-official/src/app/habits-page.ts"
+      - "demos/angular-official/src/app/hn-page.ts"
+      - "demos/angular-official/src/app/hn-item-page.ts"
+      - "demos/angular-official/src/app/todomvc-page.ts"
+      - "demos/angular-official/src/app/todomvc-advanced-page.ts"
+      - "demos/angular-official/src/app/codex-page.ts"
+      - "docs/goals/frameless-app-fidelity-v1/notes/T017-count-guard.md"
+    verify:
+      - "SWEEP FAMILY EIGHT YOURSELF AND REPORT YOUR OWN COUNT against T015's 5 sites / 5 files. Enumerate the angular wrapper components FROM THE FILESYSTEM, not from prose. If the denominator is not 8, say so and prove it."
+      - "THE GUARD MUST DERIVE, NEVER HARD-CODE. It reads the real source - the wrapper files on disk, or the SCENARIOS/DEMOS tables in scripts/demo.mjs - and recompiles the count at check time. A guard carrying its own copy of the number IS THE BUG WITH EXTRA STEPS."
+      - "RED-CAPABILITY PROOF, MANDATORY AND THE POINT OF THIS CARD: plant each of the REAL stale values that were live at HEAD before your fix, show `pnpm check:citations` FAILING and naming the file and line, then restore BYTE-IDENTICALLY and show it passing. Report the sha256 of every file you planted into, BEFORE and AFTER restoration."
+      - "NEGATIVE CONTROL ON THE GUARD ITSELF: show it does NOT fire on a correct count, and does NOT fire on the QUOTED HISTORICALS. T015 found habits-page.ts carries a quoted historical that MUST NOT be 'corrected' - if your guard flags it, YOUR GUARD IS WRONG, not the prose."
+      - "PREFER REMOVING THE FRAGILE COUNT TO GUARDING IT. For every site, first ask whether the sentence can state the fact by NAMING THE LANES OR COMPONENTS instead of a position. Guard only what is genuinely load-bearing, and SAY PER SITE which you chose and why."
+      - "THE GUARD MUST NOT SLOW OR NARROW THE EXISTING CHECK. pnpm check:citations must still sweep its current surface - 4 watched documents, 17 watched source files, 610 files - and still pass clean at the end. Report the swept counts BEFORE and AFTER."
+      - "THIS CARD DERIVES NOTHING. git diff --exit-code over 13 EXPLICIT derived paths, EACH ASSERTED TO EXIST AND BE NON-EMPTY FIRST, paired with git status --short. *** NEVER USE A WILDCARD PATHSPEC. *** Re-run all six regenerate and all six copy-emitted steps and show the trees STILL clean. USE A SHELL ARRAY."
+      - "pnpm check: BASELINE 261, PREDICTED DELTA 0. Report START and END. pnpm test EXACTLY 1 failure / pnpm e2e 6 x 9 RUN ALONE / pnpm lint."
+      - "fingerprint the owner's three dirty paths at START and FINISH with `shasum -a 256`, sorting whole output LINES: f326d314 / aeb7edc1 / f936e169, 116 files."
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to hard-code the count INTO the guard. IT MUST RECOMPILE FROM THE REAL SOURCE."
+      - "You are about to ship the guard WITHOUT a red-capability proof against the REAL pre-fix wording. AN UNPROVEN GUARD CERTIFIES THE ROT."
+      - "You are about to widen this card to family seven (53 sites / 21 files) or family nine. OD3 SEQUENCED THIS DELIBERATELY: PROVE THE MECHANISM ON THE SMALL COMPLETE FAMILY FIRST. Those are T018's and T019's."
+      - "You are about to change WHAT ANY APP DOES. The only behaviour this card may change is THE CHECK'S."
+      - "You are about to make pnpm check:citations sweep FEWER files, or take materially longer, than it does at HEAD."
+      - "You are about to 'correct' a QUOTED HISTORICAL. Some prose deliberately quotes what a file USED to say - T015 found one in habits-page.ts. Those are correct as they stand."
+      - "You are about to edit a .tsrx fixture. NONE IS IN SCOPE, and a BYTE-LENGTH change there moves the checked-in golden while the derivation proof is STRUCTURALLY BLIND to it."
+      - "You are about to rewrite ANY prior receipt or note. PRIOR RECEIPTS ARE HISTORY - RECORD, NEVER EDIT."
+      - "pnpm check rises at all. BASELINE 261, PREDICTED DELTA 0."
+      - "pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched. ALL THREE ARE ALREADY DIRTY, YOU DID NOT DO IT, DO NOT `git add -A`."
+      - "NEVER pkill -f. Stop only what you start, BY ITS RECORDED PID."
+      - "Verification fails twice for the same reason."
     receipt: null
