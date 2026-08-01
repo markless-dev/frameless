@@ -44,7 +44,7 @@ goal:
       FIXING THE FIVE FINDINGS AND LEAVING THE ORACLE HOLE OPEN. The findings are symptoms; the
       cause is that nothing ever compared a shipped app to the thing it copies.
 
-active_task: T019
+active_task: T020
 
 # ---------------------------------------------------------------------------
 # OWNER DECISIONS - taken from the owner DIRECTLY on 2026-07-31 while T009 ran.
@@ -2562,7 +2562,7 @@ tasks:
   - id: T019
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       POINT THE NOW-PROVEN INSTRUMENT AT FAMILY SEVEN - the six-lane ordinal chain, T015's 53
@@ -2628,6 +2628,147 @@ tasks:
       - "You are about to change WHAT ANY APP OR EMITTER DOES. T019 changes only the record and the check."
       - "You are about to edit a .tsrx fixture. NONE IS IN SCOPE, and a byte-length change there moves the checked-in golden while the derivation proof is STRUCTURALLY BLIND to it."
       - "You are about to touch app.routes.ts:25 'the five components below are frameless-emitted'. THERE ARE EIGHT, IT IS A TENTH FAMILY, AND IT IS NOT YOURS."
+      - "pnpm check rises at all. BASELINE 261, PREDICTED DELTA 0."
+      - "pnpm test failures exceed exactly 1, or pnpm e2e leaves 6 x 9."
+      - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched. DO NOT `git add -A`."
+      - "NEVER pkill -f. Stop only what you start, BY ITS RECORDED PID."
+      - "Verification fails twice for the same reason."
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T019-family-seven.md
+      summary: "FAMILY SEVEN CLOSED IN BOTH WHOLE LAYERS: the demo layer 100% in all six lanes and the emitter-origin layer 100% in all six. 53 of 55 sites corrected across 21 files. Ruling 11 gained TWO subjects RECOMPILED from demo.mjs's real tables, with 24 tests against a SYNTHETIC 3/5/3 table. MEASURED AND RECORDED: RULING 11 COULD SEE NONE OF THE 55 SITES AT HEAD - family seven's sentence shape carries no number and no 'of' - and .vue/.svelte prose is UNSCANNABLE, so those two lanes now state no count at all."
+      my_own_count: "55 SITES ACROSS 22 FILES against the card's 53 / 21. TWO NEW SITES T015 NEVER RECORDED: packages/frameworks/react/test/size.test.ts:232 (A SECOND SITE IN A FILE RECORDED AS HAVING ONE) and packages/frameworks/solid/test/size.test.ts:221 (A FILE MISSED ENTIRELY, OUTSIDE allowed_files). BOTH WRAP ACROSS A COMMENT LINE BREAK, WHICH IS WHY TWO PRIOR SINGLE-LINE SWEEPS MISSED THEM."
+      derived_ordinal_list: "S10=1/7 /todomvc, S11=2/7 /todomvc-advanced, S12=3/7 /codex, S13=4/7 /hn, S15=5/7 /habits, S16=6/7 /board, S17=7/7 /contacts. DERIVED THREE INDEPENDENT WAYS: announce()'s own predicates over the evaluated SCENARIOS/DEMOS literals; the shipped guard's text-slice derivation (SHARES NO CODE); and the six generated/ directories on disk. ALL THREE AGREE."
+      THE_PM_ACCEPTS_THE_DEVIATION_AND_HERE_IS_WHY: "The card's FIRST stop condition said BLOCK IF THE POPULATION LEAKS. It leaked and the worker delivered 53 of 55 instead - AND SAID SO LOUDLY, offering the PM the re-dispatch. PM RULES THE CALL CORRECT: T015 blocked because NO SLICE AVOIDED A HALF-CLOSE; here BOTH WHOLE LAYERS CLOSE SYMMETRICALLY and the remainder is an ENUMERATED TWIN PAIR recorded in the files themselves. PM INDEPENDENTLY VERIFIED THE TWINS ARE GENUINELY SYMMETRIC and that correcting the in-scope one alone WOULD have been the half-close. T020 takes both together."
+      changed_files:
+        - scripts/check-citations.mjs
+        - packages/compiler/test/citations.test.ts
+        - packages/frameworks/react/scripts/regenerate.ts
+        - packages/frameworks/solid/scripts/regenerate.ts
+        - packages/frameworks/qwik/scripts/regenerate.ts
+        - packages/frameworks/svelte/scripts/regenerate.ts
+        - packages/frameworks/vue/scripts/regenerate.ts
+        - packages/frameworks/angular/scripts/regenerate.ts
+        - packages/frameworks/react/test/size.test.ts
+        - demos/react-official/src/App.jsx
+        - demos/solid-official/src/App.jsx
+        - demos/vue-official/src/App.vue
+        - demos/qwik/src/routes/hn/index.tsx
+        - demos/qwik/src/routes/habits/index.tsx
+        - demos/qwik/src/routes/board/index.tsx
+        - demos/qwik/src/routes/contacts/index.tsx
+        - "demos/svelte-official/src/routes/hn/+page.svelte"
+        - "demos/svelte-official/src/routes/habits/+page.svelte"
+        - "demos/svelte-official/src/routes/board/+page.svelte"
+        - "demos/svelte-official/src/routes/contacts/+page.svelte"
+        - demos/angular-official/src/app/app.routes.ts
+        - demos/angular-official/src/app/board-page.ts
+        - demos/angular-official/src/app/contacts-page.ts
+        - docs/goals/frameless-app-fidelity-v1/notes/T019-family-seven.md
+      commands:
+        - cmd: "pnpm check"
+          status: pass
+          note: "261 START / 261 END, delta 0"
+        - cmd: "pnpm test"
+          status: pass
+          note: "1435 passed / 1 failed START; 1459 passed / 1 failed END. RISE OF EXACTLY 24 = the tests added. Failures still ARM B ONLY"
+        - cmd: "pnpm check:citations"
+          status: pass
+          note: "4 docs / 17 watched source / 610 swept, BEFORE AND AFTER. Ruling 11 now ALSO recompiles 7 six-lane applications and 8 corpus applications across 6 lanes"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors"
+        - cmd: "pnpm e2e RUN ALONE"
+          status: pass
+          note: "PASS, 6 demos x 9 scenarios, all observations equal"
+        - cmd: "6x regenerate + 6x copy-emitted, then git diff --exit-code over 13 EXPLICIT derived paths (SHELL ARRAY, NO WILDCARD, each asserted to exist and be non-empty)"
+          status: pass
+          note: "CLEAN before, after, AND AGAIN after pnpm e2e. LOAD-BEARING HERE: this card EDITS THE REGENERATE SCRIPTS THEMSELVES"
+        - cmd: "MUTATION 1 - the chain STORED instead of derived"
+          status: pass
+          note: "check:citations EXIT 0 AND CLEAN; suite 6 RED. digest 3080f0b0"
+        - cmd: "MUTATION 2 - the corpus detector DEAD"
+          status: pass
+          note: "check:citations EXIT 0 AND CLEAN; suite 2 RED. digest 492c1774"
+        - cmd: "guard restored byte-identical"
+          status: pass
+          note: 0b9b5360ae41299a4f93ab7b691f8f5cf27a0db7df96db3118a435eeb8ad4726
+        - cmd: "owner fingerprint START and FINISH, shasum -a 256, sorted whole LINES"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169, 116 files. START == FINISH"
+        - cmd: "PM INDEPENDENT RE-VERIFICATION of the leak"
+          status: pass
+          note: "Read both size tests at HEAD: solid:221 and react:232 carry the SAME false clause 'S11 and S12 exist in five generated/ directories'. MEASURED: S11 in SIX, S12 in SIX. THE TWINS ARE GENUINELY SYMMETRIC"
+      deviations:
+        - "DEVIATION FROM THE FIRST STOP CONDITION, STATED LOUDLY RATHER THAN QUIETLY: the population leaked outside allowed_files and it DID NOT BLOCK - it delivered 53 of 55 and offered the PM the re-dispatch. PM ACCEPTED, see above."
+        - "react/test/size.test.ts was edited for only ONE of its two sites. THE S13 SITE WAS LEFT STANDING ON PURPOSE because its IDENTICAL TWIN IS OUT OF SCOPE and correcting one lane's copy IS THE HALF-CLOSE T015 REFUSED. RECORDED IN THE FILE, not only in the note."
+        - "Renamed the exported scanAngularCounts to scanCountedSubjects (6 references updated) - it now serves TWO subject families and the old name was a misnomer."
+        - "WROTE A CORPUS-CHAIN INTEGRITY BRANCH ASSERTING THE CHAIN IS A SUBSET OF THE APPLICATIONS, THEN DELETED IT: IT IS UNFALSIFIABLE BY CONSTRUCTION. Replaced with a scenario-id shape check that is WATCHED FIRING."
+        - "Added 2 tests beyond the planned 22 AFTER MEASURING THAT MUTATION 2 ESCAPED: no test travelled the shipped COUNTED_CORPUS_SUBJECTS array BY IDENTITY. REPORTED AS A FINDING rather than quietly patched."
+        - "demos/angular-official/src/app/habits-page.ts was in allowed_files and is DELIBERATELY UNTOUCHED - its only chain wording is a QUOTED HISTORICAL."
+        - "Family nine (~14 sites in files it edited) left alone as T020's, following T018's precedent."
+      remaining_blockers:
+        - "packages/frameworks/solid/test/size.test.ts:221 - family seven's S13 ROOT CLAIM, OUTSIDE allowed_files, UNCORRECTED."
+        - "packages/frameworks/react/test/size.test.ts:232 - its IN-SCOPE TWIN, left standing DELIBERATELY so the pair moves together."
+        - "BOTH SENTENCES ALSO CARRY A FALSE FAMILY-NINE CLAUSE - 'S11 and S12 exist in five generated/ directories'; PM MEASURED SIX AND SIX - so the closing card needs FAMILY NINE AND BOTH SIZE TESTS IN SCOPE."
+        - "RULING 11 CANNOT SEE FAMILY SEVEN'S ORIGINAL SENTENCE SHAPE (no number, no 'of'), and CANNOT SCAN .vue/.svelte AT ALL - so 8 of the 55 sites are guarded BY PROSE DISCIPLINE ONLY, not by a check. Both limits are in the guard's header and PINNED AS TESTS."
+      stopped_because: null
+  - id: T020
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    objective: >-
+      CLOSE FAMILY NINE AND THE TWIN PAIR TOGETHER - the last known open population on this
+      board. Family nine is the present-tense 'the angular emitter refuses S11/S12' claim,
+      ~15 live sites. The twin pair is family seven's last two sites, which T019 deliberately
+      left standing AS A PAIR because they are symmetric and one was out of scope.
+    WHY_THESE_TWO_MUST_MOVE_IN_ONE_CARD: >-
+      react/test/size.test.ts:232 and solid/test/size.test.ts:221 are IDENTICAL TWINS carrying
+      BOTH populations in ONE SENTENCE: family seven's S13 root claim AND a family-nine clause
+      'S11 and S12 exist in five `generated/` directories'. THE PM MEASURED IT: S11 IS IN SIX AND
+      S12 IS IN SIX. Splitting them across two cards would half-close both populations at once.
+    allowed_files:
+      - "packages/frameworks/react/test/size.test.ts"
+      - "packages/frameworks/solid/test/size.test.ts"
+      - "packages/frameworks/react/scripts/regenerate.ts"
+      - "packages/frameworks/solid/scripts/regenerate.ts"
+      - "packages/frameworks/qwik/scripts/regenerate.ts"
+      - "packages/frameworks/svelte/scripts/regenerate.ts"
+      - "packages/frameworks/vue/scripts/regenerate.ts"
+      - "packages/frameworks/angular/scripts/regenerate.ts"
+      - "packages/compiler/test/enriched-ir.test.ts"
+      - "demos/react-official/src/App.jsx"
+      - "demos/solid-official/src/App.jsx"
+      - "demos/vue-official/src/App.vue"
+      - "demos/qwik/src/routes/todomvc-advanced/index.tsx"
+      - "demos/qwik/src/routes/codex/index.tsx"
+      - "demos/svelte-official/src/routes/todomvc-advanced/+page.svelte"
+      - "demos/svelte-official/src/routes/codex/+page.svelte"
+      - "scripts/check-citations.mjs"
+      - "packages/compiler/test/citations.test.ts"
+      - "docs/goals/frameless-app-fidelity-v1/notes/T020-family-nine.md"
+    verify:
+      - "SWEEP BY READING AND REPORT YOUR OWN COUNT against ~15 family-nine sites plus the 2 twins. TEN CARDS RUNNING HAVE UNDERCOUNTED - T019 found 55 where its card said 53, and BOTH NEW SITES WRAPPED ACROSS A COMMENT LINE BREAK, WHICH IS WHY TWO PRIOR SINGLE-LINE SWEEPS MISSED THEM. SWEEP MULTI-LINE."
+      - "MEASURE THE GENERATED DIRECTORIES YOURSELF: how many `generated/` directories hold S11, and how many hold S12? Do NOT copy SIX from this card. Then correct every sentence that says five."
+      - "MEASURE ANGULAR EMITTING S11 AND S12 YOURSELF at HEAD - the files on disk and, if you serve anything, BY BODY HASH against a 404 control, NEVER by HTTP 200. Angular's unbuilt list is `[]` at packages/frameworks/angular/test/unbuilt-scenarios.ts:84; confirm that yourself too."
+      - "PREFER OD3's FIRST HALF: remove the fragile count where the sentence can name the lanes instead. Where a count stays and IS GUARDABLE, extend ruling 11 with a subject that RECOMPILES it and PORT ITS PLANTS INTO citations.test.ts IN THIS CARD, with a MUTATION showing the tests RED while pnpm check:citations still PASSES CLEAN."
+      - "RULING 11 CANNOT SEE .vue OR .svelte PROSE AT ALL and cannot see a sentence carrying no number and no 'of'. T019 measured both. DO NOT ASSUME THE CHECK COVERS WHAT YOU FIXED - say per site whether it is guarded or prose-discipline only."
+      - "THIS CARD DERIVES NOTHING. git diff --exit-code over 13 EXPLICIT derived paths, EACH ASSERTED TO EXIST AND BE NON-EMPTY FIRST, paired with git status --short. *** NEVER USE A WILDCARD PATHSPEC. *** Re-run all six regenerate AND all six copy-emitted steps - THIS CARD EDITS THE REGENERATE SCRIPTS - and show the trees STILL clean. USE A SHELL ARRAY."
+      - "pnpm check BASELINE 261 PREDICTED DELTA 0, START and END / pnpm test - if you add tests state passed BEFORE and AFTER, rise by exactly that many, failures STILL EXACTLY 1 / pnpm e2e 6 x 9 RUN ALONE / pnpm lint / pnpm check:citations still 4 docs / 17 watched source / 610 swept."
+      - "fingerprint the owner's three dirty paths at START and FINISH with `shasum -a 256`, sorting whole output LINES: f326d314 / aeb7edc1 / f936e169, 116 files."
+    stop_if:
+      - "Need files outside allowed_files. IF THE POPULATION LEAKS AGAIN, SAY SO EXPLICITLY AND STATE WHETHER A WHOLE-LAYER CLOSE IS STILL AVAILABLE - T019 did exactly that and the PM accepted its call."
+      - "You are about to correct ONE of the two size-test twins. THEY MOVE TOGETHER OR NOT AT ALL."
+      - "You are about to write a count YOU DID NOT MEASURE YOURSELF AT HEAD."
+      - "You are about to 'correct' a QUOTED HISTORICAL or a PAST-TENSE DATED RECORD. Three cards have now had to rule on these; they are correct as they stand."
+      - "You are about to change WHAT ANY APP OR EMITTER DOES. T020 changes only the record and the check."
+      - "You are about to touch demos/angular-official/src/app/app.routes.ts:25 'the five components below are frameless-emitted'. THERE ARE EIGHT, IT IS A TENTH FAMILY, AND IT IS NOT YOURS."
+      - "You are about to edit a .tsrx fixture. NONE IS IN SCOPE, and a byte-length change moves the checked-in golden while the derivation proof is STRUCTURALLY BLIND to it."
+      - "You are about to weaken an existing ruling to make a site pass. EXEMPT BY NAME WITH A REASON."
+      - "You are about to rewrite ANY prior receipt or note. PRIOR RECEIPTS ARE HISTORY."
       - "pnpm check rises at all. BASELINE 261, PREDICTED DELTA 0."
       - "pnpm test failures exceed exactly 1, or pnpm e2e leaves 6 x 9."
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched. DO NOT `git add -A`."

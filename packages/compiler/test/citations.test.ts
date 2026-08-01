@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import {
 	ANGULAR_COUNT_NOT_SCANNED,
 	COUNTED_ANGULAR_SUBJECTS,
+	COUNTED_CORPUS_SUBJECTS,
 	EXCLUDED_FILES,
 	FOREIGN_REPOSITORY_TARGETS,
 	NOT_YET_WATCHED,
@@ -18,14 +19,18 @@ import {
 	angularWrapperComponents,
 	classify,
 	commentsOnly,
+	corpusApplications,
+	corpusChainIntegrityProblems,
+	corpusLanes,
 	emitterClassificationProblems,
 	findCitations,
 	foreignShadowProblems,
 	integrityProblems,
 	listTrackedSourceFiles,
-	scanAngularCounts,
+	scanCountedSubjects,
 	scanRepository,
 	scanText,
+	sixLaneApplications,
 	sweepProblems,
 	sweptSourceFiles,
 } from '../../../scripts/check-citations.mjs';
@@ -705,9 +710,9 @@ describe('T053 citation-ordinal guard', () => {
 			].join('\n');
 
 		const scanPlant = (claim: string, file: string) =>
-			scanAngularCounts(commentsOnly(planted(claim)), file, subjectsFor(lane));
+			scanCountedSubjects(commentsOnly(planted(claim)), file, subjectsFor(lane));
 
-		const siteOf = (violations: ReturnType<typeof scanAngularCounts>) =>
+		const siteOf = (violations: ReturnType<typeof scanCountedSubjects>) =>
 			violations.map((v) => `${v.file}:${v.lineNumber} ${v.kind}`);
 
 		/**
@@ -784,7 +789,7 @@ describe('T053 citation-ordinal guard', () => {
 				// is load-bearing for the control above. A per-line detector goes quiet here.
 				const file = 'demos/angular-official/src/app/habits-page.ts';
 				const wrapped = ['/**', ' * It was corrected to the SIXTH of', ' * EIGHT wrapper components.', ' */'].join('\n');
-				const found = scanAngularCounts(commentsOnly(wrapped), file, subjectsFor(lane));
+				const found = scanCountedSubjects(commentsOnly(wrapped), file, subjectsFor(lane));
 				expect(siteOf(found)).toEqual([`${file}:2 underivable-position`, `${file}:3 stale-derived-count`]);
 			});
 
@@ -875,7 +880,7 @@ describe('T053 citation-ordinal guard', () => {
 			test('adding a tenth wrapper and a ninth route turns green prose red', () => {
 				const file = 'demos/angular-official/src/app/habits-page.ts';
 				const prose = planted('there are NINE wrapper components and EIGHT application routes here');
-				expect(scanAngularCounts(commentsOnly(prose), file, subjectsFor(lane))).toEqual([]);
+				expect(scanCountedSubjects(commentsOnly(prose), file, subjectsFor(lane))).toEqual([]);
 
 				const grown = mkdtempSync(join(tmpdir(), 'ruling11-grown-'));
 				try {
@@ -890,7 +895,7 @@ describe('T053 citation-ordinal guard', () => {
 					);
 					expect(angularWrapperComponents(grown)).toHaveLength(10);
 					expect(angularApplicationRoutes(join(grown, 'app.routes.ts'))).toHaveLength(9);
-					const found = scanAngularCounts(commentsOnly(prose), file, subjectsFor(grown));
+					const found = scanCountedSubjects(commentsOnly(prose), file, subjectsFor(grown));
 					expect(siteOf(found)).toEqual([
 						`${file}:6 stale-derived-count`,
 						`${file}:6 stale-derived-count`,
@@ -984,6 +989,316 @@ describe('T053 citation-ordinal guard', () => {
 					`${file}:6 underivable-position`,
 					`${file}:6 stale-derived-count`,
 				]);
+			});
+		});
+	});
+
+	/**
+	 * T019 RULING 11'S SECOND FAMILY — THE SIX-LANE CHAIN, AND THE HOLE IT MEASURED
+	 * BEFORE IT ADDED A SUBJECT.
+	 *
+	 * T015 swept 53 sites across 21 files stating WHERE a corpus application sits in
+	 * the sequence every lane emits, and T019 found 55 across 22. Not one of them
+	 * contained a NUMBER: they said "the THIRD scenario all six lanes emit, after S13
+	 * and S15". The count rule had nothing to recompile and the position rule had no
+	 * `of` to hinge on, SO RULING 11 COULD NOT SEE A SINGLE SITE OF THAT FAMILY. The
+	 * first three tests here pin that limit with the real pre-fix wordings, because a
+	 * limit nobody re-runs is a limit that quietly becomes a claim of coverage.
+	 *
+	 * WHAT IS GUARDED IS THE CLASS THE FIX NAMES. Removing the position left sentences
+	 * that name "the SIX-LANE APPLICATIONS", and seven of them state the count. That
+	 * noun is recompiled from the SAME two tables `announce()` in scripts/demo.mjs
+	 * reads, so an S18, or a lane recording a refusal, moves it.
+	 *
+	 * THE NUMBERS BELOW ARE 3 / 5 / 3 AND THE REPOSITORY'S ARE 6 / 8 / 7, DELIBERATELY.
+	 * Every derivation here is repointed at a SYNTHETIC corpus table in a temp dir whose
+	 * answers differ from the real one in all three positions, so a test that leaked
+	 * into repository prose fails instead of passing by coincidence.
+	 */
+	describe('T019 ruling 11 — the six-lane chain is recompiled, not recited', () => {
+		const dir = mkdtempSync(join(tmpdir(), 'ruling11-corpus-'));
+		const table = join(dir, 'demo.mjs');
+		const grown = join(dir, 'demo-grown.mjs');
+
+		/** A `scripts/demo.mjs`-shaped table: the slice anchors on the tabs and the `];`. */
+		const corpusTable = (refusals: Record<string, string>) =>
+			'// synthetic corpus table\n' +
+			'const SCENARIOS = [\n' +
+			["S1", "S2", "S3"].map((id) => `\t{ id: '${id}', path: '/${id}', title: 'contract' },\n`).join('') +
+			["S10", "S11", "S12", "S13"].map((id) => `\t{ id: '${id}', path: '/${id}', title: 'app' },\n`).join('') +
+			`\t{\n\t\tid: 'S14',\n\t\tpath: '/S14',\n\t\ttitle: 'the multi-line row shape the real table also has',\n\t},\n` +
+			'];\n\n' +
+			'const DEMOS = [\n' +
+			Object.entries(refusals)
+				.map(([name, absent]) => `\t{\n\t\tname: '${name}',\n\t\tunbuilt: ${absent},\n\t},\n`)
+				.join('') +
+			'];\n';
+
+		beforeAll(() => {
+			// 3 lanes, 5 applications, and TWO of them refused somewhere -> a chain of 3.
+			writeFileSync(table, corpusTable({ alpha: '{}', beta: '{ S12: REFUSAL }', gamma: '{ S14: REFUSAL }' }));
+			// The same table with beta's refusal closed, exactly the way T007 closed
+			// angular's: the chain becomes 4 WITHOUT A ROW BEING ADDED.
+			writeFileSync(grown, corpusTable({ alpha: '{}', beta: '{}', gamma: '{ S14: REFUSAL }' }));
+		});
+		afterAll(() => rmSync(dir, { recursive: true, force: true }));
+
+		// The SHIPPED subjects — shipped nouns, shipped position and count rules — with
+		// only the derivation repointed. Overriding a regex would test a copy of the guard.
+		const subjectsFor = (file: string) =>
+			COUNTED_CORPUS_SUBJECTS.map((subject) =>
+				subject.positionIsDerivable
+					? { ...subject, derive: () => corpusApplications(file) }
+					: { ...subject, derive: () => sixLaneApplications(file) },
+			);
+
+		/** The claim always lands on LINE 6, inside a doc comment, with code either side. */
+		const planted = (claim: string) =>
+			[
+				"import { TaskBoard } from '../emitted/TaskBoard';",
+				'',
+				'export const noTrace = () => {};',
+				'',
+				'/**',
+				` * The /board route, and ${claim}.`,
+				' *',
+				' * It exists to link stylesheets on this route and no other.',
+				' */',
+				'export const BoardPage = () => <TaskBoard onTrace={noTrace} />;',
+			].join('\n');
+
+		const file = 'demos/react-official/src/App.jsx';
+		const scanPlant = (claim: string, source = table) =>
+			scanCountedSubjects(commentsOnly(planted(claim)), file, subjectsFor(source));
+		const siteOf = (violations: ReturnType<typeof scanCountedSubjects>) =>
+			violations.map((v) => `${v.file}:${v.lineNumber} ${v.kind}`);
+
+		/**
+		 * THE MEASURED HOLE. Every wording here is what the file named beside it ACTUALLY
+		 * CONTAINED at `eeaed45`, the commit before T019 corrected it. All three are GREEN,
+		 * and that is the finding: OD3's first half had to be applied BY HAND because no
+		 * tight rule can read a number out of a sentence that contains none.
+		 */
+		describe('CANNOT see the family it was pointed at, which is why the fix removed the position', () => {
+			for (const [where, claim] of [
+				['regenerate.ts / S16', 'it is the THIRD scenario all six lanes emit, after S13 and S15'],
+				['App.jsx / S13', 'the FIRST in this corpus that all SIX lanes emit'],
+				['app.routes.ts / S15', 'THE SECOND CORPUS APPLICATION THIS LANE SHIPS ALONGSIDE THE OTHER FIVE'],
+			])
+				test(`${where} — "${claim}" is invisible`, () => {
+					expect(scanPlant(claim)).toEqual([]);
+				});
+		});
+
+		describe('goes red on the class the fix names', () => {
+			test('a stale count fires, with its site and its recompiled reason', () => {
+				const found = scanPlant('one of the SEVEN six-lane applications');
+				expect(siteOf(found)).toEqual([`${file}:6 stale-derived-count`]);
+				expect(found[0].reason).toContain('This prose says 7 six-lane applications; the source has 3');
+				// The reason NAMES them, so a reader is never left to re-derive it by hand.
+				expect(found[0].reason).toContain('S10, S11, S13');
+			});
+
+			test('the correct count is GREEN, so the rule is not merely allergic to numbers', () => {
+				expect(scanPlant('one of the THREE six-lane applications')).toEqual([]);
+			});
+
+			test('A BARE ORDINAL FIRES — the licence family eight does not take', () => {
+				// Family eight always wrote "the Nth OF M"; family seven never wrote `of` at
+				// all, so this subject carries its own bridge. That is the whole reason the
+				// position half is enforceable here.
+				expect(siteOf(scanPlant('the THIRD six-lane application'))).toEqual([
+					`${file}:6 underivable-position`,
+				]);
+			});
+
+			test('the "Nth of M" spelling fires BOTH halves at once', () => {
+				expect(siteOf(scanPlant('the FIFTH of the seven six-lane applications'))).toEqual([
+					`${file}:6 underivable-position`,
+					`${file}:6 stale-derived-count`,
+				]);
+			});
+
+			test('a claim reflowed across two comment lines is still ONE claim, reported where a reader finds it', () => {
+				const wrapped = ['/**', ' * The /board route, and it is the', ' * THIRD six-lane application here.', ' */'].join('\n');
+				const found = scanCountedSubjects(commentsOnly(wrapped), file, subjectsFor(table));
+				expect(siteOf(found)).toEqual([`${file}:3 underivable-position`]);
+			});
+
+			test('THE SHIPPED REMEDY TEXT STAYS GREEN — the rule must not red-flag its own fix', () => {
+				// This is the sentence T019 wrote into twenty-one files. A looser bridge that
+				// caught "the FOURTH APPLICATION - ... - and one of the SIX-LANE APPLICATIONS"
+				// would have turned the whole corrected corpus red.
+				expect(
+					scanPlant('one of the SIX-LANE APPLICATIONS, the corpus rows every lane emits'),
+				).toEqual([]);
+				expect(scanPlant('a SIX-LANE APPLICATION for the same reason S15 is')).toEqual([]);
+			});
+		});
+
+		describe('a quotation is a recitation, and the exemption is doing the work', () => {
+			test('the quoted historical is GREEN and its unquoted twin is RED', () => {
+				const quoted = 'this line used to read "the THIRD six-lane application" and it was wrong';
+				const bare = 'this line used to read the THIRD six-lane application and it was wrong';
+				expect(scanPlant(quoted)).toEqual([]);
+				expect(siteOf(scanPlant(bare))).toEqual([`${file}:6 underivable-position`]);
+			});
+		});
+
+		describe('the corpus-application subject, and the asymmetry it is allowed', () => {
+			test('a stale count of the applications fires', () => {
+				const found = scanPlant('this corpus has NINE corpus applications');
+				expect(siteOf(found)).toEqual([`${file}:6 stale-derived-count`]);
+				expect(found[0].reason).toContain('says 9 corpus applications; the source has 5');
+			});
+
+			test('the correct count is GREEN', () => {
+				expect(scanPlant('this corpus has FIVE corpus applications')).toEqual([]);
+			});
+
+			test('A POSITION AMONG THE APPLICATIONS IS ALLOWED, and that is a measurement', () => {
+				// "THE EIGHTH APPLICATION - CONTACTS" is true, stable and derivable: the slots
+				// are handed out in table order with no second basis. Forbidding it would demand
+				// the correction of correct prose, which is what ruling 6 exists to stop.
+				expect(scanPlant('THE EIGHTH corpus application - CONTACTS')).toEqual([]);
+			});
+		});
+
+		/**
+		 * THE DERIVATION IS LIVE, NOT STORED. A guard carrying its own copy of "seven"
+		 * passes every test above and still certifies a stale tree the day the table moves.
+		 */
+		describe('recompiles from the table it is given', () => {
+			test('the real table and the synthetic one disagree in all three positions', () => {
+				expect([corpusLanes().length, corpusApplications().length, sixLaneApplications().length]).toEqual([6, 8, 7]);
+				expect([corpusLanes(table).length, corpusApplications(table).length, sixLaneApplications(table).length]).toEqual([3, 5, 3]);
+			});
+
+			test('CLOSING A REFUSAL MOVES THE CHAIN, and byte-identical green prose goes red', () => {
+				// No row is added: beta simply stops refusing S12, exactly as the angular lane
+				// stopped refusing S11 and S12 at T007 — the event that made this whole family
+				// stale in the first place.
+				expect(sixLaneApplications(grown)).toEqual(['S10', 'S11', 'S12', 'S13']);
+				const prose = 'one of the THREE six-lane applications';
+				expect(scanPlant(prose, table)).toEqual([]);
+				const found = scanPlant(prose, grown);
+				expect(siteOf(found)).toEqual([`${file}:6 stale-derived-count`]);
+				expect(found[0].reason).toContain('the source has 4');
+			});
+
+			test('the real repository derivation reproduces announce()s own chain, in order', () => {
+				// Not a coincidence check: this is the sequence every corrected sentence in the
+				// corpus now declines to number, and S13 sits FOURTH in it rather than first.
+				expect(sixLaneApplications()).toEqual(['S10', 'S11', 'S12', 'S13', 'S15', 'S16', 'S17']);
+			});
+		});
+
+		/**
+		 * ANTI-VACUITY. These derivations read TWO ARRAY LITERALS OUT OF A TEXT FILE, so
+		 * they can fail three quieter ways than a directory listing can. Every branch is
+		 * watched FIRING.
+		 */
+		describe('cannot be emptied without saying so', () => {
+			test('the real table is clean', () => {
+				expect(corpusChainIntegrityProblems()).toEqual([]);
+			});
+
+			test('a table whose slice finds NOTHING is refused under both floors', () => {
+				const gutted = join(dir, 'demo-gutted.mjs');
+				writeFileSync(gutted, '// the tables were renamed\nconst ROWS = [\n];\n');
+				const problems = corpusChainIntegrityProblems(gutted, subjectsFor(gutted));
+				expect(problems).toHaveLength(3);
+				expect(problems[0]).toContain('derivation of the lanes found 0');
+				expect(problems[1]).toContain('six-lane applications found 0');
+				expect(problems[2]).toContain('corpus applications found 0');
+			});
+
+			test('a table that has MOVED is refused rather than passing over nothing', () => {
+				const problems = corpusChainIntegrityProblems('scripts/nowhere.mjs');
+				expect(problems).toHaveLength(1);
+				expect(problems[0]).toContain('which does not exist');
+			});
+
+			test('A SLICE THAT CAPTURED THE WRONG FIELD FIRES — the branch a subset check could not', () => {
+				// The rows are matched by a regex over text. If a reformat put `path` where
+				// `id` is, the applications would come back as ROUTES and the `S1`-`S9` filter
+				// would pass them straight through, so the shape is asserted rather than assumed.
+				const shuffled = join(dir, 'demo-shuffled.mjs');
+				writeFileSync(
+					shuffled,
+					'// paths captured as ids\nconst SCENARIOS = [\n' +
+						"\t{ id: 'todomvc', path: '/todomvc', title: 'a' },\n" +
+						"\t{ id: 'codex', path: '/codex', title: 'b' },\n];\n\n" +
+						"const DEMOS = [\n\t{\n\t\tname: 'alpha',\n\t\tunbuilt: {},\n\t},\n\t{\n\t\tname: 'beta',\n\t\tunbuilt: {},\n\t},\n];\n",
+				);
+				const problems = corpusChainIntegrityProblems(shuffled, subjectsFor(shuffled));
+				expect(problems).toHaveLength(1);
+				expect(problems[0]).toContain('read todomvc, codex as a scenario id');
+			});
+		});
+
+		/**
+		 * THE SHIPPED PATH, EXERCISED BY IDENTITY — AND THIS BLOCK EXISTS BECAUSE THE
+		 * SUITE ABOVE MISSED A MUTATION.
+		 *
+		 * Every test above repoints the derivations, which means it hands
+		 * `scanCountedSubjects` a NEW array built by `.map` rather than the shipped
+		 * `COUNTED_CORPUS_SUBJECTS`. Measured while proving this card: a mutation that
+		 * short-circuits the detector FOR THE SHIPPED ARRAY left `pnpm check:citations`
+		 * clean AND all of those tests green, because not one of them travelled the path
+		 * `scanRepository` actually takes. So these two hand it the shipped array itself.
+		 *
+		 * The PROSE is still synthetic and the assertions still avoid the real numbers: a
+		 * numeral no corpus will reach, and a position that is refused whatever the count.
+		 */
+		describe('the SHIPPED subject list is what scanRepository walks', () => {
+			test('a stale count fires through the shipped array, not a repointed copy', () => {
+				const found = scanCountedSubjects(
+					commentsOnly(planted('one of the 99 six-lane applications')),
+					file,
+					COUNTED_CORPUS_SUBJECTS,
+				);
+				expect(siteOf(found)).toEqual([`${file}:6 stale-derived-count`]);
+				expect(found[0].reason).toContain(`the source has ${sixLaneApplications().length}`);
+			});
+
+			test('a position fires through the shipped array whatever the count happens to be', () => {
+				expect(
+					siteOf(
+						scanCountedSubjects(
+							commentsOnly(planted('the THIRD six-lane application')),
+							file,
+							COUNTED_CORPUS_SUBJECTS,
+						),
+					),
+				).toEqual([`${file}:6 underivable-position`]);
+			});
+		});
+
+		/**
+		 * T019 ADDED A PER-SUBJECT POSITION BRIDGE. This block exists to prove it changed
+		 * NOTHING for family eight, because T018 measured that widening the shared pattern
+		 * would fire on "one of this lane's wrapper components" — the sentence T017 wrote
+		 * into five files AS THE FIX.
+		 */
+		describe('family eight is untouched by the bridge that family seven needed', () => {
+			test('"the SECOND of two wrapper components" still fires both halves', () => {
+				const found = scanCountedSubjects(
+					commentsOnly('/**\n * the SECOND of two wrapper components in this lane\n */'),
+					'demos/angular-official/src/app/todomvc-page.ts',
+					COUNTED_ANGULAR_SUBJECTS,
+				);
+				expect(found.map((v) => v.kind)).toEqual(['underivable-position', 'stale-derived-count']);
+			});
+
+			test('A BARE ORDINAL STILL DOES NOT FIRE THERE, which is the licence T019 did not take', () => {
+				expect(
+					scanCountedSubjects(
+						commentsOnly('/**\n * the SECOND wrapper component in this lane\n */'),
+						'demos/angular-official/src/app/todomvc-page.ts',
+						COUNTED_ANGULAR_SUBJECTS,
+					),
+				).toEqual([]);
 			});
 		});
 	});

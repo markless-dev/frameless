@@ -1058,6 +1058,22 @@ export const scanText = (text, label = '<text>') =>
  * BOTH SHAPES WERE FOUND BY READING THE FILES, NOT BY RUNNING THE CHECK, which is the
  * honest statement of what this instrument is: it makes a stated NUMBER re-derivable,
  * and it does not make prose true.
+ *
+ * A SECOND FAMILY WAS ADOPTED BY T019 - THE SIX-LANE CHAIN - AND IT ADDED A THIRD HOLE
+ * BEFORE IT ADDED A SUBJECT. The 53 sites T015 swept never once wrote a NUMBER: they
+ * wrote "the THIRD scenario all six lanes emit and ship, after S13 and S15". There is
+ * no count in that sentence for the rule above to recompile and no `of` for the
+ * position rule to hinge on, so RULING 11 COULD NOT SEE ONE SITE OF THAT FAMILY AT
+ * HEAD. That is the third measured limit, and it decided the shape of the fix: OD3's
+ * first half - REMOVE THE POSITION - had to close the family by hand, and the second
+ * half could only be applied where the corrected sentence names a class this file can
+ * count. See `COUNTED_CORPUS_SUBJECTS`.
+ *
+ * A FOURTH LIMIT IS STRUCTURAL AND IS NOT THIS RULE'S TO FIX. Ruling 10's sweep is
+ * scoped to JS/TS because `commentsOnly` is a JS lexer, so the vue lane's `App.vue`
+ * and the svelte lane's `+page.svelte` route prose - TWO OF THE SIX LANES - cannot be
+ * scanned at all. Their sentences were corrected by hand and deliberately state NO
+ * count, because a number written where no check can read it looks guarded and is not.
  */
 const ANGULAR_LANE_DIR = 'demos/angular-official/src/app';
 
@@ -1171,6 +1187,126 @@ const ORDINAL_WORDS = [
 	'twentieth',
 ];
 
+/**
+ * RULING 11's SECOND FAMILY - THE SIX-LANE CHAIN - AND WHY IT NEEDED NEW DERIVATIONS
+ * RATHER THAN A NEW NOUN. T015 swept 53 sites across 21 files that all state the same
+ * kind of claim: WHERE a corpus application sits in the sequence of applications that
+ * ALL SIX LANES emit. Every one of them counted from S13, because S13's own comment
+ * once claimed to be the first - and that was wrong ON THE DAY IT WAS WRITTEN. S10 has
+ * carried no `unbuilt` entry in any revision of `scripts/demo.mjs`, so it was always
+ * first; S11 and S12 then joined when `frameless-app-fidelity-v1` T007 closed the
+ * angular global-identifier hole. The whole family was short by three names.
+ *
+ * THE POPULATION IS DEFINED WHERE THE PROGRAM ALREADY DEFINES IT. `announce()` in
+ * `scripts/demo.mjs` computes this exact set to print it - applications are the rows
+ * whose id is not `S1`-`S9`, and the chain is the applications with no `unbuilt` entry
+ * in ANY lane. The prose paraphrased that computation by hand. These derivations read
+ * the SAME two tables out of the SAME file at check time, so the day an S18 lands, or
+ * a lane records a new refusal, every stated count moves with it.
+ *
+ * THE TABLES ARE SLICED, NOT EVALUATED. Importing `scripts/demo.mjs` would RUN it -
+ * it is a CLI that boots six dev servers - so the two array literals are cut out
+ * between their `const NAME = [` opener and the `];` that closes them at column zero,
+ * and read with the narrowest regexes that answer the question. A slice that fails
+ * yields nothing, which is why `corpusChainIntegrityProblems` puts a floor under all
+ * three derivations.
+ */
+const CORPUS_TABLE_FILE = 'scripts/demo.mjs';
+
+const corpusTableBlock = (name, file = CORPUS_TABLE_FILE) => {
+	const text = readFileSync(resolve(root, file), 'utf8');
+	const opener = `\nconst ${name} = [\n`;
+	const start = text.indexOf(opener);
+	if (start < 0) return '';
+	const end = text.indexOf('\n];\n', start);
+	if (end < 0) return '';
+	return text.slice(start + opener.length, end);
+};
+
+/** The lanes, in table order. `react, solid, qwik, svelte, vue, angular` today. */
+export const corpusLanes = (file = CORPUS_TABLE_FILE) =>
+	[...corpusTableBlock('DEMOS', file).matchAll(/^\t\tname:\s*'([^']+)'/gm)].map((match) => match[1]);
+
+/**
+ * The corpus APPLICATIONS: every scenario row whose id is not in the `['s1'..'s9']`
+ * three-way contract. `announce()` spells that predicate `!/^S[1-9]$/`, and this is
+ * the same predicate over the same rows.
+ */
+export const corpusApplications = (file = CORPUS_TABLE_FILE) =>
+	[...corpusTableBlock('SCENARIOS', file).matchAll(/^\t\{\s*id:\s*'([^']+)'|^\t\tid:\s*'([^']+)'/gm)]
+		.map((match) => match[1] ?? match[2])
+		.filter((id) => !/^S[1-9]$/.test(id));
+
+/**
+ * THE CHAIN ITSELF: the applications with no `unbuilt` entry in any lane. Every
+ * `unbuilt` map in the DEMOS block is read and its scenario keys removed from the
+ * application list, which is `announce()`'s own predicate spelled against the text.
+ */
+export const sixLaneApplications = (file = CORPUS_TABLE_FILE) => {
+	const absent = new Set(
+		[...corpusTableBlock('DEMOS', file).matchAll(/unbuilt:\s*\{([^}]*)\}/g)].flatMap((match) =>
+			[...match[1].matchAll(/\bS\d+\b/g)].map((key) => key[0]),
+		),
+	);
+	return corpusApplications(file).filter((id) => !absent.has(id));
+};
+
+/**
+ * THE SUBJECTS OF THE SIX-LANE CHAIN, SCANNED REPOSITORY-WIDE RATHER THAN IN ONE
+ * DIRECTORY. Family eight lived in a single lane, so its scope is that lane's
+ * directory. This family is spread across all six demo lanes AND the six
+ * `scripts/regenerate.ts` tables the demo wording is paraphrased from, so its scope is
+ * ruling 10's sweep - every tracked, lexable source file - and there is no list to
+ * keep and nothing to exempt.
+ *
+ * WHAT THAT SCOPE DOES NOT REACH, MEASURED AND WRITTEN DOWN. Ruling 10 is scoped to
+ * JS/TS because `commentsOnly` is a JS lexer, so `demos/vue-official/src/App.vue` and
+ * the four `+page.svelte` route files under `demos/svelte-official/src/routes` - two
+ * of the six lanes - ARE STRUCTURALLY INVISIBLE HERE. Their prose was corrected and
+ * carries no stated count for that reason: a number written where the guard cannot
+ * read it is worse than no number, because it looks checked. THAT LIMIT IS ALSO WHY
+ * THIS DOC COMMENT NAMES NO GLOB - a `+page.svelte` path written with a star closes
+ * the block comment on its own slash, which is how this very paragraph first broke.
+ */
+export const COUNTED_CORPUS_SUBJECTS = [
+	{
+		subject: 'six-lane applications',
+		// A NOUN THIS REPOSITORY DID NOT HAVE, WHICH IS THE POINT. The family's own
+		// spellings - "scenario in this corpus that all six lanes emit", "corpus
+		// application this lane ships alongside the other five" - are sentences, not
+		// nouns, and no tight rule can read a number out of them. So the fix names the
+		// class once and the guard checks THAT name. It appears nowhere in this
+		// repository except where a card has stated the count deliberately.
+		noun: String.raw`six-lane applications?`,
+		positionIsDerivable: false,
+		// THIS FAMILY NEVER WROTE "of", WHICH IS WHY THE BRIDGE IS ITS OWN. Family eight
+		// said "the FIFTH of five wrapper components"; family seven said "the THIRD
+		// scenario all six lanes emit". Requiring `of` would leave the position half of
+		// OD3's ruling unenforced for the family it was written for. Widening the SHARED
+		// pattern instead would fire on "THE EIGHTH APPLICATION", which is correct prose
+		// derived from the same table, so the licence is taken per subject and only for
+		// a noun no correct sentence uses with an ordinal.
+		positionBridge: String.raw`(?:\s+of\b[^.]{0,40}?|\s+)`,
+		derive: () => sixLaneApplications(),
+		derivedFrom:
+			"the SCENARIOS rows in scripts/demo.mjs with no `unbuilt` entry in any DEMOS lane",
+	},
+	{
+		subject: 'corpus applications',
+		noun: String.raw`corpus applications?`,
+		// POSITION IS ALLOWED HERE, AND THE ASYMMETRY IS THE SAME MEASUREMENT RULING 11
+		// ALREADY MADE FOR ROUTES. An application's position is its ORDINAL SLOT - S10 is
+		// the first, S17 the eighth - and the slots are handed out in table order with no
+		// second basis to guess at. "THE EIGHTH APPLICATION - CONTACTS" is true, stable
+		// and derivable, so forbidding it would demand the correction of correct prose.
+		// The chain above has no such stable basis: S11 and S12 entered it years after
+		// S13 did, so its ARRIVAL order and its TABLE order disagree.
+		positionIsDerivable: true,
+		derive: () => corpusApplications(),
+		derivedFrom: 'the SCENARIOS rows in scripts/demo.mjs outside the s1-s9 contract',
+	},
+];
+
 export const COUNTED_ANGULAR_SUBJECTS = [
 	{
 		subject: 'wrapper components',
@@ -1250,7 +1386,7 @@ const quotedSpans = (prose) => {
  * does, so `scanRepository` and the reporter treat them identically - one guard, one
  * output format, one exit code.
  */
-export const scanAngularCounts = (text, label = '<text>', subjects = COUNTED_ANGULAR_SUBJECTS) => {
+export const scanCountedSubjects = (text, label = '<text>', subjects = COUNTED_ANGULAR_SUBJECTS) => {
 	const { prose, positions } = proseStream(text);
 	const quoted = quotedSpans(prose);
 	const isQuoted = (index) => quoted.some(([from, to]) => index > from && index < to);
@@ -1259,8 +1395,15 @@ export const scanAngularCounts = (text, label = '<text>', subjects = COUNTED_ANG
 	for (const subject of subjects) {
 		const derived = subject.derive();
 		if (!subject.positionIsDerivable) {
+			// THE BRIDGE BETWEEN THE ORDINAL AND THE NOUN IS PER SUBJECT, AND ITS DEFAULT IS
+			// THE ONLY SHAPE T017 AND T018 MEASURED. Family eight always wrote "the Nth OF
+			// M wrapper components", and T018 measured that widening the licence this rule
+			// takes would fire on "one of this lane's wrapper components" - the exact
+			// sentence T017 wrote into five files AS THE FIX. So the default still demands
+			// `of`, and a subject that needs a looser bridge states one and owns its own
+			// blast radius.
 			const position = new RegExp(
-				String.raw`\b(${ORDINAL_WORDS.join('|')})\s+of\b[^.]{0,40}?\b${subject.noun}\b`,
+				String.raw`\b(${ORDINAL_WORDS.join('|')})${subject.positionBridge ?? String.raw`\s+of\b[^.]{0,40}?`}\b${subject.noun}\b`,
 				'gi',
 			);
 			for (const match of prose.matchAll(position)) {
@@ -1343,6 +1486,65 @@ export const angularCountIntegrityProblems = (
 				`ANGULAR_COUNT_NOT_SCANNED names ${entry.path}, which does not exist. Re-rule it: ` +
 					'an exemption that points at nothing is a hole with a reason attached.',
 			);
+	for (const subject of subjects) {
+		const derived = subject.derive();
+		if (derived.length < 2)
+			problems.push(
+				`RULING 11's derivation of ${subject.subject} found ${derived.length}, from ` +
+					`${subject.derivedFrom}. A count that recompiles to nothing agrees with ` +
+					'nothing, so every claim about it would read green.',
+			);
+	}
+	return problems;
+};
+
+/**
+ * THE SAME ANTI-VACUITY CHECK FOR THE SIX-LANE CHAIN, AND IT HAS MORE TO CATCH THAN
+ * ITS SIBLING. Family eight's derivations read a DIRECTORY, which either exists or
+ * does not. These read TWO ARRAY LITERALS OUT OF A TEXT FILE, so they can fail three
+ * quieter ways: the file moves, a table is renamed, or a reformat breaks the slice.
+ * Every one of those yields an EMPTY derivation, and an empty derivation agrees with
+ * nothing - so every stated count in the repository would read green at once. Floors
+ * on all three, an existence check on the file, and the structural invariant that the
+ * chain is a subset of the applications.
+ *
+ * IT TAKES ITS FILE AND ITS SUBJECTS AS ARGUMENTS for the reason every other integrity
+ * function here does: so the suite can hand it a gutted table AND WATCH EACH BRANCH
+ * FIRE, rather than watching a green run over the real one and calling that a test.
+ */
+export const corpusChainIntegrityProblems = (
+	file = CORPUS_TABLE_FILE,
+	subjects = COUNTED_CORPUS_SUBJECTS,
+) => {
+	const problems = [];
+	if (!existsSync(resolve(root, file))) {
+		problems.push(
+			`RULING 11's six-lane chain names ${file}, which does not exist. The corpus table ` +
+				'moved or the rule is dead; either way every count derived from it would pass ' +
+				'vacuously.',
+		);
+		return problems;
+	}
+	const lanes = corpusLanes(file);
+	if (lanes.length < 2)
+		problems.push(
+			`RULING 11's derivation of the lanes found ${lanes.length} in ${file}'s DEMOS table. ` +
+				'That is too few for this corpus, so the slice broke rather than the corpus ' +
+				'shrinking, and the chain below is derived from nothing.',
+		);
+	// THE SHAPE CHECK EARNS ITS PLACE AND A SUBSET CHECK WOULD NOT. `sixLaneApplications`
+	// filters `corpusApplications`, so "the chain is a subset" is true by construction -
+	// a branch that cannot fire is the decoration this file's header warns about. What
+	// CAN fire is the slice capturing the wrong thing: these rows are matched by a regex
+	// over text, and a reformat that moved `path` in front of `id` would yield a list of
+	// ROUTES which the `S1`-`S9` filter would happily pass through.
+	const malformed = corpusApplications(file).filter((id) => !/^S\d+$/.test(id));
+	if (malformed.length > 0)
+		problems.push(
+			`RULING 11's slice of ${file} read ${malformed.join(', ')} as a scenario id. Those ` +
+				'are not ids, so the slice captured the wrong field and both counts below are ' +
+				'counting something else.',
+		);
 	for (const subject of subjects) {
 		const derived = subject.derive();
 		if (derived.length < 2)
@@ -1470,6 +1672,9 @@ export const integrityProblems = () => {
 	// RULING 11's equivalent for the derived counts: a derivation that returns nothing
 	// is a green run over an unread source.
 	problems.push(...angularCountIntegrityProblems());
+	// And the same for the six-lane chain, whose derivations read a text file rather
+	// than a directory and can therefore fail more quietly.
+	problems.push(...corpusChainIntegrityProblems());
 	return problems;
 };
 
@@ -1490,7 +1695,13 @@ export const scanRepository = () => {
 	// a file needs no entry anywhere to be checked, only to be excused.
 	for (const path of sweptSourceFiles()) {
 		const text = readFileSync(resolve(root, path), 'utf8');
-		violations.push(...scanText(commentsOnly(text), path));
+		const comments = commentsOnly(text);
+		violations.push(...scanText(comments, path));
+		// RULING 11's SIX-LANE CHAIN. A THIRD DETECTOR OVER THE PROSE THIS LOOP HAS
+		// ALREADY READ, not a third sweep: the file count above is unchanged and these
+		// counts are asked of every swept file, because this family is spread over all
+		// six lanes and both layers rather than living in one directory.
+		violations.push(...scanCountedSubjects(comments, path, COUNTED_CORPUS_SUBJECTS));
 	}
 	// RULING 11. A SECOND DETECTOR OVER THE SAME PROSE, NOT A SECOND SWEEP: these files
 	// are already inside ruling 10's sweep above and are counted there, so this adds a
@@ -1498,7 +1709,7 @@ export const scanRepository = () => {
 	// reporter, same exit code.
 	for (const path of angularLaneFiles()) {
 		const text = readFileSync(resolve(root, path), 'utf8');
-		violations.push(...scanAngularCounts(commentsOnly(text), path));
+		violations.push(...scanCountedSubjects(commentsOnly(text), path));
 	}
 	return { violations, integrity: integrityProblems() };
 };
@@ -1532,5 +1743,11 @@ if (isMain) {
 		`check-citations: ruling 11 recompiled ${COUNTED_ANGULAR_SUBJECTS.map(
 			(subject) => `${subject.derive().length} ${subject.subject}`,
 		).join(' and ')} and agreed with the prose in ${angularLaneFiles().length} file(s).`,
+	);
+	console.log(
+		`check-citations: ruling 11 recompiled ${COUNTED_CORPUS_SUBJECTS.map(
+			(subject) => `${subject.derive().length} ${subject.subject}`,
+		).join(' and ')} across ${corpusLanes().length} lanes and agreed with the prose in ` +
+			`${sweptSourceFiles().length} swept file(s).`,
 	);
 }

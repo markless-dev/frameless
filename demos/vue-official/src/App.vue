@@ -300,8 +300,13 @@ const s8Ready = ref<Promise<string>>(s8ResolvedGate)
     's1', and the chain's first `v-else-if` tests for 's1'. A trailing arm could
     never fire.
 
-    THIS WAS THE FIRST APPLICATION ROUTE IN THIS DEMO WHOSE LANE COUNT WAS SIX,
-    and the first that this lane served with NOTHING misbehaving. S11 and S12
+    THIS WAS THE FIRST APPLICATION ROUTE THIS LANE SERVED WITH NOTHING
+    MISBEHAVING, and that half of the record stands. The half beside it did not:
+    this line also said it was the first route in this demo whose LANE COUNT WAS
+    SIX, and that was false even as a dated record - /todomvc has been served by
+    every lane in every revision of scripts/demo.mjs, so S10's lane count was six
+    first. It is removed rather than re-dated because arrival order lives in git
+    history and nothing on disk can recover it. S11 and S12
     USED TO throw on `_ctx.Promise is not a constructor` - the emitter inlines
     handlers into template expressions and @vue/shared@3.5.40's GLOBALS_ALLOWED
     omits Promise and setTimeout - and `frameless-app-fidelity-v1` T007 closed
@@ -344,8 +349,10 @@ const s8Ready = ref<Promise<string>>(s8ResolvedGate)
   -->
   <!--
         THE SIXTH APPLICATION - the HABIT TRACKER - and THE SIX-LANE FAN-OUT PAGE.
-        It is the SECOND scenario in this corpus that all six lanes emit and ship,
-        after S13, and the FIRST designed to be so: the whole app is SYNCHRONOUS
+        It is a SIX-LANE APPLICATION, and the FIRST designed to be so rather than
+        turning out that way - the position this line used to state instead ("the
+        SECOND ... after S13") counted from S13, which was never first: the whole
+        app is SYNCHRONOUS
         DERIVED STATE, so there is no `Promise`/`setTimeout` for angular's
         global-identifier ban to catch, no async door for vue's GLOBALS_ALLOWED gap
         to open, and no component reference for either of T003's two emitter
@@ -396,8 +403,10 @@ const s8Ready = ref<Promise<string>>(s8ResolvedGate)
     <HabitTracker v-bind:onTrace="noTrace" />
   </template>
   <!--
-    THE SEVENTH APPLICATION - the TASK BOARD - and THE DRAG CARD. It is the THIRD
-    scenario in this corpus that all six lanes emit and ship, after S13 and S15.
+    THE SEVENTH APPLICATION - the TASK BOARD - and THE DRAG CARD. It is a SIX-LANE
+    APPLICATION for the same reason S15 is: THE FIXTURE NAMES NO GLOBAL. The
+    position this line used to state instead counted from S13, which was never
+    first - see the /hn arm above.
 
     THE AXIS THIS PAGE EXISTS TO MEASURE IS NOW ON IT. The board predicted the
     two-word drag events "cannot be produced" because the compiler does
@@ -433,8 +442,11 @@ const s8Ready = ref<Promise<string>>(s8ResolvedGate)
     <TaskBoard v-bind:onTrace="noTrace" />
   </template>
   <!--
-    THE EIGHTH APPLICATION - CONTACTS - and THE FORMS CARD. It is the FOURTH scenario
-    in this corpus that all six lanes emit and ship, after S13, S15 and S16, and
+    THE EIGHTH APPLICATION - CONTACTS - and THE FORMS CARD. It is a SIX-LANE
+    APPLICATION for the same reason S15 and S16 are: THE FIXTURE NAMES NO GLOBAL,
+    which mattered most here because a `date` input's obvious default is today and
+    `Date` stays refused. The position this line used to state instead counted from
+    S13, which was never first - see the /hn arm above.
     This comment used to add "UNLIKE S16 THE AXIS IT MEASURES IS ACTUALLY ON THE PAGE"
     - S16's axis is on its page now, in five of six lanes, so the contrast is WITHDRAWN
     rather than left to read as current. What is true of THIS page, and unlike S16, is

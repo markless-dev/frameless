@@ -210,20 +210,24 @@ export function scenarioFor(url) {
   // /codex exists and vue's stream no longer throws. Browsable only, like the
   // two above.
   if (path === 'codex') return 'codex'
-  // THE FOURTH APPLICATION - the HACKER NEWS FRONT PAGE - and the first one in
-  // this corpus that SIX lanes emit rather than five or four. Browsable only,
+  // THE FOURTH APPLICATION - the HACKER NEWS FRONT PAGE - and one of the
+  // SIX-LANE APPLICATIONS, the corpus rows every lane emits. This line used to
+  // call it "the first one in this corpus that SIX lanes emit"; it never was -
+  // S10 has carried no `unbuilt` entry in scripts/demo.mjs in any revision - and
+  // the whole family of position claims counted from here. Browsable only,
   // like the three above: `scripts/e2e.mjs` pins `threeWayScenarios` to the
   // literal ['s1'..'s9'].
   if (path === 'hn') return 'hn'
   if (path === 'hn-item') return 'hn-item'
-  // THE SIXTH APPLICATION - the HABIT TRACKER - and the second scenario in
-  // this corpus that all SIX lanes emit and ship. Browsable only.
+  // THE SIXTH APPLICATION - the HABIT TRACKER - and a SIX-LANE APPLICATION by
+  // design rather than by luck: its whole mechanism is synchronous derived
+  // state, so it names no global and references no component. Browsable only.
   if (path === 'habits') return 'habits'
-  // THE SEVENTH APPLICATION - the TASK BOARD - and the third scenario all SIX
-  // lanes emit and ship, after S13 and S15. Browsable only.
+  // THE SEVENTH APPLICATION - the TASK BOARD - and a SIX-LANE APPLICATION for
+  // the same reason S15 is: THE FIXTURE NAMES NO GLOBAL. Browsable only.
   if (path === 'board') return 'board'
-  // THE EIGHTH APPLICATION - CONTACTS - and the fourth scenario all SIX lanes
-  // emit and ship, after S13, S15 and S16. Browsable only.
+  // THE EIGHTH APPLICATION - CONTACTS - and a SIX-LANE APPLICATION for the same
+  // reason S15 and S16 are: THE FIXTURE NAMES NO GLOBAL. Browsable only.
   if (path === 'contacts') return 'contacts'
   return 's1'
 }
@@ -370,8 +374,12 @@ export default function App({ url }) {
         </>
       )
     case 'hn':
-      // THE FOURTH APPLICATION - the HACKER NEWS FRONT PAGE - and the FIRST in
-      // this corpus that all SIX lanes emit. S11 and S12 lose angular to its
+      // THE FOURTH APPLICATION - the HACKER NEWS FRONT PAGE - and one of the
+      // SIX-LANE APPLICATIONS. This block used to call it "the FIRST in this
+      // corpus that all SIX lanes emit" and it never was: S10 has carried no
+      // `unbuilt` entry in scripts/demo.mjs in any revision, and every stale
+      // position in this family counted from this sentence.
+      // S11 and S12 lose angular to its
       // global-identifier ban; S13 names no global at all, because every age is
       // a literal string in the seeded data rather than something computed from
       // `Date`. That is a constraint of the fixture, not a happy accident - see
@@ -466,8 +474,10 @@ export default function App({ url }) {
       )
     case 'habits':
       // THE SIXTH APPLICATION - the HABIT TRACKER - and THE SIX-LANE FAN-OUT
-      // PAGE. It is the SECOND scenario in this corpus that all six lanes emit
-      // and ship, after S13, and the FIRST that was designed to be so: the whole
+      // PAGE. It is a SIX-LANE APPLICATION, and the FIRST that was designed to
+      // be so rather than turning out that way - the position this line used to
+      // state instead ("the SECOND ... after S13") counted from S13, which was
+      // never first: the whole
       // app is SYNCHRONOUS DERIVED STATE, so there is no `Promise`/`setTimeout`
       // for angular's global-identifier ban to catch, no async door for vue's
       // GLOBALS_ALLOWED gap to open, and no component reference for either of
@@ -508,9 +518,10 @@ export default function App({ url }) {
         </>
       )
     case 'board':
-      // THE SEVENTH APPLICATION - the TASK BOARD - and THE DRAG CARD. It is the
-      // THIRD scenario in this corpus that all six lanes emit and ship, after
-      // S13 and S15.
+      // THE SEVENTH APPLICATION - the TASK BOARD - and THE DRAG CARD. It is a
+      // SIX-LANE APPLICATION for the same reason S15 is: THE FIXTURE NAMES NO
+      // GLOBAL. The position this line used to state instead counted from S13,
+      // which was never first - see the /hn block above.
       //
       // THE AXIS THIS PAGE EXISTS TO MEASURE IS ON IT IN FIVE LANES AND NOT IN
       // THIS ONE. This comment used to read "THE AXIS THIS PAGE EXISTS TO
@@ -582,9 +593,12 @@ export default function App({ url }) {
         </>
       )
     case 'contacts':
-      // THE EIGHTH APPLICATION - CONTACTS - and THE FORMS CARD. It is the FOURTH
-      // scenario in this corpus that all six lanes emit and ship, after S13, S15 and
-      // S16. This comment used to add "UNLIKE S16 THE AXIS IT MEASURES IS ACTUALLY
+      // THE EIGHTH APPLICATION - CONTACTS - and THE FORMS CARD. It is a SIX-LANE
+      // APPLICATION for the same reason S15 and S16 are: THE FIXTURE NAMES NO
+      // GLOBAL, which mattered most here because a `date` input's obvious default
+      // is today and `Date` stays refused. The position this line used to state
+      // instead counted from S13, which was never first - see the /hn block
+      // above. This comment used to add "UNLIKE S16 THE AXIS IT MEASURES IS ACTUALLY
       // ON THE PAGE" - S16'S AXIS IS ON ITS PAGE NOW, in five of six lanes, so the
       // contrast is withdrawn rather than left to read as current. What is true of
       // THIS page, and unlike S16, is that its axis is on it in ALL SIX: THIRTEEN

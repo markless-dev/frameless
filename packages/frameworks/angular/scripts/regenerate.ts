@@ -130,11 +130,20 @@ const fixtures = [
 	['S14.ts', 's14-hn-item.json'],
 	// THE SIXTH APPLICATION IN THE CORPUS - the HABIT TRACKER - and THE SIX-LANE
 	// FAN-OUT SCENARIO. It takes the next ORDINAL slot for the reason every row
-	// above records. IT IS THE SECOND SCENARIO IN THE CORPUS THAT ALL SIX LANES
-	// EMIT, after S13, and the first that was built to be so ON PURPOSE: the
-	// whole app is SYNCHRONOUS DERIVED STATE, so it named no global at all and no
-	// component reference, and neither of the two emitter defects T003 isolated
-	// could reach it. AT THE TIME THAT MATTERED FOR A REASON THAT NO LONGER
+	// above records. IT IS ONE OF THE SEVEN SIX-LANE APPLICATIONS - the corpus
+	// rows every lane emits - and the first that was built to be so ON PURPOSE. A
+	// POSITION IN THAT SEQUENCE USED TO BE WRITTEN HERE AND IT WAS WRONG IN EVERY
+	// LANE: this row read "the SECOND ... after S13", counting from S13 because
+	// S13's own comment once claimed to be the first. S13 never was - S10 has
+	// carried no `unbuilt` entry in any revision of scripts/demo.mjs - and S11 and
+	// S12 joined when T007 closed the angular global-identifier hole, so the tail
+	// was short by three names as well. THE COUNT SURVIVES AND THE POSITION DOES
+	// NOT: seven is recompiled from that table at check time by ruling 11 in
+	// scripts/check-citations.mjs, while arrival order lives in git history and
+	// nothing on disk can recover it. WHAT THE POSITION WAS STANDING IN FOR IS
+	// THIS: the whole app is SYNCHRONOUS DERIVED STATE, so it named no global at
+	// all and no component reference, and neither of the two emitter defects T003
+	// isolated could reach it. AT THE TIME THAT MATTERED FOR A REASON THAT NO LONGER
 	// APPLIES - `Promise` and `setTimeout` were unnameable in this lane and blew a
 	// hole in the vue lane's runtime, and `frameless-app-fidelity-v1` T007 closed
 	// both with the two-name allowlist. What it does NOT change is the clock: its
@@ -145,8 +154,12 @@ const fixtures = [
 	['S15.ts', 's15-habit-tracker.json'],
 	// THE SEVENTH APPLICATION IN THE CORPUS - the TASK BOARD - and THE DRAG CARD.
 	// It takes the next ORDINAL slot for the reason every row above records, and
-	// it is the THIRD scenario all six lanes emit, after S13 and S15 - and the
-	// THIRD this lane ships alongside the other five.
+	// it is a SIX-LANE APPLICATION for the same reason S15 is: THE FIXTURE NAMES
+	// NO GLOBAL. It used to claim a POSITION in that sequence TWICE IN ONE
+	// SENTENCE - "the THIRD ... after S13 and S15" and "the THIRD this lane ships
+	// alongside the other five" - and both counted from S13, which was never
+	// first. Naming the reason is durable; the position was not, and nothing on
+	// disk can recompute arrival order. See the S15 row above.
 	//
 	// THE AXIS IT MEASURES IS IN THE FILE, AND THIS LANE DRAGS. This row used to
 	// say it was not in the file. The
@@ -181,8 +194,13 @@ const fixtures = [
 	// Like S10-S15 it stays OUT of the 6 x 9 three-way contract, which
 	// scripts/e2e.mjs pins to the literal ['s1'..'s9'].
 	['S16.ts', 's16-task-board.json'],
-	// THE EIGHTH APPLICATION IN THE CORPUS - CONTACTS - and THE FORMS CARD, the
-	// FOURTH scenario all six lanes emit. THIRTEEN control kinds ship, every one
+	// THE EIGHTH APPLICATION IN THE CORPUS - CONTACTS - and THE FORMS CARD. It is
+	// a SIX-LANE APPLICATION for the same reason S15 and S16 are: THE FIXTURE
+	// NAMES NO GLOBAL, which mattered most here because a `date` input's obvious
+	// default is today and `Date` stays refused. It used to claim a POSITION in
+	// that sequence - "the FOURTH scenario all six lanes emit" - counting from
+	// S13, which was never first. See the S15 row above. THIRTEEN control kinds
+	// ship, every one
 	// bound and every one observable in a live preview card.
 	//
 	// THIS LANE ALMOST LOST THE CARD, AND NOT ON THE AXIS. The first spelling of

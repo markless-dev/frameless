@@ -4,8 +4,10 @@
 </script>
 
 <!--
-	THE SEVENTH APPLICATION - the TASK BOARD - and THE DRAG CARD. It is the THIRD
-	scenario in this corpus that all six lanes emit and ship, after S13 and S15.
+	THE SEVENTH APPLICATION - the TASK BOARD - and THE DRAG CARD. It is a SIX-LANE
+	APPLICATION for the same reason S15 is: THE FIXTURE NAMES NO GLOBAL. The
+	position this header used to state instead counted from S13, which was never
+	first - the /hn header records why.
 
 	THE AXIS THIS PAGE EXISTS TO MEASURE IS ON IT, AND THIS LANE DRAGS. This
 	comment used to say the axis was not on the page and that THIS LANE WAS THE

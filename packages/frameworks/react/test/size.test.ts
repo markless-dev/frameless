@@ -231,7 +231,21 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// S13 (the HACKER NEWS FRONT PAGE) IS THE CORPUS'S NEW HEAVYWEIGHT ON BOTH
 	// AXES, and it is the FIRST application row in this table that has a twin in
 	// all SIX lanes: S11 and S12 exist in five `generated/` directories, S13 in
-	// six. Against S11, the previous heaviest: 576/424 = 1.36x the physical lines
+	// six.
+	//
+	// BOTH HALVES OF THAT SENTENCE ARE STALE AND IT IS LEFT STANDING ON PURPOSE,
+	// which is a decision and not an oversight. The position is the same six-lane
+	// chain claim `frameless-app-fidelity-v1` T019 removed from twenty-one other
+	// files - S10 has a twin in all six lanes and always has - and the clause
+	// supporting it belongs to a DIFFERENT family: S11 and S12 now exist in SIX
+	// `generated/` directories, measured, since T007 closed the angular
+	// global-identifier hole. T019 could not correct it here because THE IDENTICAL
+	// SENTENCE SITS IN packages/frameworks/solid/test/size.test.ts, which was
+	// outside that card's scope, and correcting one lane's copy while leaving the
+	// other is the half-close T015 blocked rather than ship. The two must move
+	// together, with the angular-refusal family, in one card.
+	//
+	// Against S11, the previous heaviest: 576/424 = 1.36x the physical lines
 	// and 2106/1891 = 1.11x the structural nodes. THE TWO RATIOS DO NOT AGREE
 	// HERE, and that is the reading worth recording rather than smoothing - every
 	// earlier application row in this table (S10 vs S7 at 2.33/2.20, S11 vs S10 at
@@ -314,8 +328,10 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// separating them is the evidence that the old equality was a coincidence of
 	// two corpora rather than a law this table had found.
 	// WHAT THE NUMBER CANNOT SEE, and on this row it is the entire point of the
-	// scenario. S15 is the SECOND scenario in the corpus that all six lanes emit
-	// and the first built to be so deliberately, and its claim is that ONE CLICK
+	// scenario. S15 is a SIX-LANE APPLICATION and the first built to be so
+	// deliberately - the position this line used to state instead ("the SECOND
+	// scenario in the corpus that all six lanes emit") counted from S13, which was
+	// never first. Its claim is that ONE CLICK
 	// MOVES EIGHT DERIVED OBSERVABLES IN ALL SIX LANES AT ONCE. A budget cannot see
 	// a fan-out at all: an emitter that repainted only the clicked row would emit
 	// byte-identical output and measure identically here. Only a driven browser

@@ -157,8 +157,15 @@ export const routes: Routes = [
   // global-identifier ban - they are the two routes directly above now - while
   // S13 named no global at all, because every relative age is a literal string
   // in the seeded data. So this was the route that put this lane back at parity
-  // with the other five, and S13 is the first corpus application that all SIX
-  // lanes serve.
+  // with the other five - which is the durable half of what this paragraph used
+  // to claim. The other half said S13 is "the first corpus application that all
+  // SIX lanes serve", and it never was: /todomvc has been served by every lane in
+  // every revision of scripts/demo.mjs. THERE ARE SEVEN SIX-LANE APPLICATIONS and
+  // this route is one of them; the count is recompiled from that table at check
+  // time by ruling 11 in scripts/check-citations.mjs, and the POSITION is gone
+  // because arrival order lives in git history and nothing on disk can recover
+  // it. Every stale position in this family - across all six lanes and both the
+  // demo and emitter layers - counted from the sentence removed here.
   //
   // It goes through a WRAPPER, like /todomvc and for the same reason: a `<link>`
   // has to be rendered by something, and putting it in src/index.html or
@@ -205,8 +212,8 @@ export const routes: Routes = [
     path: 'hn-item',
     component: HnItemPage,
   },
-  // THE SIXTH APPLICATION - the HABIT TRACKER - and THE SECOND CORPUS
-  // APPLICATION THIS LANE SHIPS ALONGSIDE THE OTHER FIVE. It was built to clear
+  // THE SIXTH APPLICATION - the HABIT TRACKER - and ONE OF THE SIX-LANE
+  // APPLICATIONS THIS LANE SHIPS ALONGSIDE THE OTHER FIVE. It was built to clear
   // the two absences that used to define this file: S11 and S12 were refused on
   // the global-identifier ban, and S14 was emitted but rejected by the lane's own
   // gate over `imports`. S15 names no global and references no component, so
@@ -236,8 +243,8 @@ export const routes: Routes = [
     path: 'habits',
     component: HabitsPage,
   },
-  // THE SEVENTH APPLICATION - the TASK BOARD - and THE DRAG CARD. It is the THIRD
-  // scenario this lane ships alongside the other five, after S13 and S15, and it
+  // THE SEVENTH APPLICATION - the TASK BOARD - and THE DRAG CARD. It is a
+  // SIX-LANE APPLICATION this lane ships alongside the other five, and it
   // survives here for the same reason S15 does: THE FIXTURE NAMES NO GLOBAL. The
   // natural spelling of "move one column right" is `columns.indexOf(...)` clamped
   // with `Math.min`, and `Math` is a global this emitter cannot resolve in a
@@ -270,8 +277,8 @@ export const routes: Routes = [
     path: 'board',
     component: BoardPage,
   },
-  // THE EIGHTH APPLICATION - CONTACTS - and THE FORMS CARD. It is the FOURTH
-  // scenario this lane ships alongside the other five, after S13, S15 and S16,
+  // THE EIGHTH APPLICATION - CONTACTS - and THE FORMS CARD. It is a SIX-LANE
+  // APPLICATION this lane ships alongside the other five,
   // and it survives here for the same reason S15 and S16 do: THE FIXTURE NAMES
   // NO GLOBAL. That mattered more on this card than on either of those, because
   // a `date` input's obvious default is today and `Date` is a global this

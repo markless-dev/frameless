@@ -15,8 +15,8 @@ import { noTrace } from './scenario-props';
  * the links in their route wiring for the same reason, so the six pages stay
  * like for like.
  *
- * THIS IS THE THIRD CORPUS APPLICATION THIS LANE SHIPS ALONGSIDE THE OTHER FIVE,
- * after S13 and S15, and it survives for the same reason S15 does: THE FIXTURE
+ * THIS IS ONE OF THE SIX-LANE APPLICATIONS THIS LANE SHIPS ALONGSIDE THE OTHER
+ * FIVE, and it survives for the same reason S15 does: THE FIXTURE
  * NAMES NO GLOBAL. That is not luck. The natural spelling of "move one column to
  * the right" is `columns.indexOf(...)` clamped with `Math.min`, and `Math` is a
  * global this emitter cannot resolve in a transplanted body - so each column

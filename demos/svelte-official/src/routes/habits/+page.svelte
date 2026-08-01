@@ -5,9 +5,11 @@
 
 <!--
 	THE SIXTH APPLICATION - the HABIT TRACKER - and THE SIX-LANE FAN-OUT PAGE. It
-	is the SECOND scenario in this corpus that all six lanes emit and ship, after
-	S13, and the FIRST that was designed to be so rather than turning out that way:
-	the whole app is SYNCHRONOUS DERIVED STATE, so there is no `Promise` or
+	is a SIX-LANE APPLICATION, and the FIRST that was designed to be so rather than
+	turning out that way - the position this header used to state instead ("the
+	SECOND ... after S13") counted from S13, which was never first, and the /hn
+	header records why. The whole app is SYNCHRONOUS DERIVED STATE, so there is no
+	`Promise` or
 	`setTimeout` for the angular lane's global-identifier ban to catch, no async
 	door for the vue lane's GLOBALS_ALLOWED gap to open, and NO COMPONENT REFERENCE
 	for either of the two emitter defects T003 isolated to reach.

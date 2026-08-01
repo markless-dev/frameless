@@ -4,8 +4,11 @@
 </script>
 
 <!--
-	THE EIGHTH APPLICATION - CONTACTS - and THE FORMS CARD. It is the FOURTH
-	scenario in this corpus that all six lanes emit and ship, after S13, S15 and S16,
+	THE EIGHTH APPLICATION - CONTACTS - and THE FORMS CARD. It is a SIX-LANE
+	APPLICATION for the same reason S15 and S16 are: THE FIXTURE NAMES NO GLOBAL,
+	which mattered most here because a `date` input's obvious default is today and
+	`Date` stays refused. The position this header used to state instead counted
+	from S13, which was never first - the /hn header records why.
 	This comment used to add "UNLIKE S16 THE AXIS IT MEASURES IS ACTUALLY ON THE
 	PAGE" - S16's axis is on its page now, in five of six lanes, so the contrast is
 	WITHDRAWN rather than left to read as current. What is true of THIS page, and

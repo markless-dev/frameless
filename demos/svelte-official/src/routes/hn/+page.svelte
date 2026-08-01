@@ -27,8 +27,11 @@
 </script>
 
 <!--
-	THE FOURTH APPLICATION - the HACKER NEWS FRONT PAGE - and the FIRST in this
-	corpus that all SIX lanes emit. S11 and S12 lose angular to its
+	THE FOURTH APPLICATION - the HACKER NEWS FRONT PAGE - and one of the SIX-LANE
+	APPLICATIONS. This header used to call it "the FIRST in this corpus that all
+	SIX lanes emit" and it never was: S10 has carried no `unbuilt` entry in
+	scripts/demo.mjs in any revision, and every stale position in this family
+	counted from this sentence. S11 and S12 lose angular to its
 	global-identifier ban; S13 names no global anywhere, because every relative
 	age is a literal string in the seeded data rather than something computed from
 	`Date`. That is a constraint of the fixture, not luck.
