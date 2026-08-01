@@ -22,8 +22,17 @@ import { noTrace, s2Seed, s4Seed, s5Seed, s6Label, s6Seed, s7Seed, s9Seed } from
 /**
  * DELTA from the `ng new --ssr` scaffold's `app.routes.ts`, which ships
  * `export const routes: Routes = []` and nothing else. One shared IR, six
- * emitters: the five components below are frameless-emitted and copied in by
- * `pnpm copy-emitted`.
+ * emitters: EVERY COMPONENT IMPORTED FROM `../emitted/` ABOVE is frameless-emitted
+ * and copied in by `pnpm copy-emitted`; everything else in the import list is
+ * hand-written wiring that lives in this directory.
+ *
+ * THAT SENTENCE CARRIED A COUNT TOO - it said "the five components below", which
+ * was the number of `../emitted/` imports on the day it was written.
+ * `frameless-app-fidelity-v1` T021 re-counted them and found EIGHT. The count is
+ * gone rather than corrected, because the import path NAMES the class exactly and
+ * a reader can grep it in one command, while a number here rots on the next
+ * scenario - which is precisely what it did. It is not guarded and it does not
+ * need to be: there is no number left in it to recompile.
  *
  * The props travel as static route `data`, bound to the components' `@Input()`s
  * by `withComponentInputBinding()` in `app.config.ts`. That is Angular's own
@@ -124,10 +133,19 @@ export const routes: Routes = [
   // AND THE TWO ROUTES THIS LANE WAITED LONGEST FOR. They are the only two
   // scenarios this lane ever refused: the emitter could not NAME `Promise` or
   // `setTimeout` inside a transplanted body, and the artificial delay both apps
-  // use is made of exactly those two. `frameless-app-fidelity-v1` T003 ruled a
-  // TWO-NAME allowlist and T007 landed it, so /todomvc-advanced and /codex are
-  // the FIFTH AND SIXTH LANES for S11 and S12 - the corpus now has no scenario
-  // this lane omits.
+  // use is made of exactly those two. `frameless-app-fidelity-v1` T003 ruled the
+  // globals allowlist - `TRANSPLANTED_GLOBALS` in
+  // packages/frameworks/angular/src/emitter/index.ts - and T007 landed it, so THIS
+  // LANE NOW EMITS S11 AND S12 ALONGSIDE THE OTHER FIVE and the corpus has no
+  // scenario it omits.
+  //
+  // THAT SENTENCE CARRIED AN ARRIVAL POSITION AND IT IS GONE: it said these two
+  // routes "are the FIFTH AND SIXTH LANES for S11 and S12", which counted repair
+  // order - angular lost on the globals ban, vue lost separately on `_ctx.Promise`
+  // - and attached it to two ROUTES, which are not lanes at all. Ruling 11 of
+  // scripts/check-citations.mjs refuses an arrival position outright: it lives in
+  // git history and nothing on disk can recover it. The corpus-lane COUNT is
+  // derivable and is stated where it is guarded; this position was neither.
   //
   // The ban was NEVER about async, and the correction is worth keeping next to
   // the routes it unblocked: it was reproduced on a fully synchronous control

@@ -3,8 +3,19 @@
 	import HnFront from '$lib/emitted/HnFront.svelte';
 	import { hnDestination } from '$lib/scenario-props';
 
-	// THE /hn NAV SINK, added by frameless-app-fidelity-v1 T006, and THE SHORTEST
-	// OF THE SIX BECAUSE THIS LANE HAS ONE DESTINATION AND NOT TWO.
+	// THE /hn NAV SINK, added by frameless-app-fidelity-v1 T006, and A
+	// ONE-DESTINATION SINK: `hnDestination` names two routes and only the '/hn'
+	// arm can ever fire here.
+	//
+	// THIS LINE USED TO READ "THE SHORTEST OF THE SIX BECAUSE THIS LANE HAS ONE
+	// DESTINATION AND NOT TWO", AND THE BECAUSE WAS FALSE EVEN WHERE THE
+	// SUPERLATIVE MEASURED TRUE. `demos/vue-official/src/App.vue` guards on
+	// `to === '/hn'` for the IDENTICAL reason and its dispatch line is LONGER, so
+	// having one destination is not what makes this one short - `goto` is simply a
+	// shorter name than `window.location.assign`. The position is gone rather than
+	// corrected: nothing on disk recompiles which of six handlers is shortest, and
+	// a count written in a `.svelte` file cannot be read by `pnpm check:citations`
+	// anyway, for the reason the block comment below records.
 	//
 	// `goto` is SvelteKit's own client navigation - the router this app already
 	// had - so the logo and the wordmark reach /hn without a document reload.

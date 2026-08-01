@@ -63,9 +63,18 @@ function scenarioCorpus(extension: string, directory = 'generated'): string[] {
 		.map((entry) => /^s(\d+)-[\w-]+\.json$/.exec(entry)?.[1])
 		.filter((digits): digits is string => digits !== undefined)
 		.map((digits) => `${directory}/S${digits}.${extension}`)
-		// The subtraction declared in `unbuilt-scenarios.ts`: this lane REFUSES S11
-		// on its global-identifier ban, so there is no artifact for the gate to read.
-		// `emitter.test.ts` asserts that refusal is live.
+		// THE SEAM FOR A REFUSED SCENARIO, AND IT SUBTRACTS NOTHING AT HEAD. This
+		// line used to read "this lane REFUSES S11 on its global-identifier ban, so
+		// there is no artifact for the gate to read". MEASURED: `ANGULAR_UNBUILT_SCENARIOS`
+		// is EMPTY, and `generated/S11.ts` and `generated/S12.ts` are BOTH on disk -
+		// `frameless-app-fidelity-v1` T003 ruled the globals allowlist
+		// (`TRANSPLANTED_GLOBALS` in src/emitter/index.ts) and T007 landed it, which
+		// deleted both rows. The filter STAYS because the seam has to survive the next
+		// refusal, and an empty subtraction is not an unwatched one: `emitter.test.ts`
+		// asserts the emptiness EXACTLY, drives both formerly-refused goldens through
+		// the real `emit()` and requires them to SUCCEED with their artifacts present,
+		// and keeps a `Math` row as the live negative control that the fail-closed arm
+		// still throws.
 		.filter((file) => !isUnbuiltEmitted(file))
 		.sort();
 	// Fail LOUD rather than returning []. An empty derivation would make the

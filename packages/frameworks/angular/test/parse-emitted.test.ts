@@ -42,8 +42,13 @@ function scenarioCorpus(goldenRoot = compilerGoldenRoot): string[] {
 		.map((entry) => /^s(\d+)-[\w-]+\.json$/.exec(entry)?.[1])
 		.filter((digits): digits is string => digits !== undefined)
 		.map((digits) => `S${digits}.ts`)
-		// The subtraction declared in `unbuilt-scenarios.ts`. `emitter.test.ts`
-		// asserts the underlying refusal is live, so this is not a skip list.
+		// THE SEAM FOR A REFUSED SCENARIO, AND IT SUBTRACTS NOTHING AT HEAD.
+		// `ANGULAR_UNBUILT_SCENARIOS` is EMPTY and `generated/S11.ts` and
+		// `generated/S12.ts` are BOTH on disk, since `frameless-app-fidelity-v1`
+		// T007 landed the globals allowlist and deleted its two rows. This is not
+		// a skip list and the emptiness is not unwatched: `emitter.test.ts` asserts
+		// the list EXACTLY empty and requires both formerly-refused goldens to
+		// EMIT. See `unbuilt-scenarios.ts`.
 		.filter((file) => !isUnbuiltEmitted(file))
 		.sort(byScenarioNumber);
 	// Fail LOUD rather than returning []. An empty derivation would make the

@@ -10,10 +10,9 @@ import { HnFront } from "../../emitted/HnFront.jsx";
 // global-identifier ban and `frameless-app-fidelity-v1` T007 closed that, so all
 // SIX CORPUS LANES now emit all three. S13 NEVER NEEDED THAT REPAIR, and that
 // difference is the durable half: it names no global anywhere, because every
-// relative
-// age ("3 hours ago") is a literal string in the seeded data rather than
-// something computed from `Date`. That is a constraint of the fixture rather
-// than luck - see packages/compiler/test/fixtures/s13-hn-front.tsrx (9).
+// relative age ("3 hours ago") is a literal string in the seeded data rather
+// than something computed from `Date`. That is a constraint of the fixture
+// rather than luck - see packages/compiler/test/fixtures/s13-hn-front.tsrx (9).
 //
 // THE AXIS THIS PAGE MEASURES IS "DATA WITHOUT A DOOR", AND THE DOOR IS SHUT.
 // Fetch-on-render is unreachable in every lane: there is no lifecycle hook in
@@ -35,10 +34,19 @@ import { HnFront } from "../../emitted/HnFront.jsx";
 // where the links actually died.
 //
 // SO THE HANDLER BELOW DISPATCHES THROUGH THIS LANE'S REAL ROUTER. `useNavigate`
-// is @qwik.dev/router's own client navigation - the same one a `<Link>` uses -
-// which makes qwik the one lane of the six that reaches /hn-item WITHOUT a
-// document reload. The logo and the wordmark reach /hn; a story's comments link
-// reaches /hn-item, which THIS LANE SHIPS and svelte and vue do not.
+// is @qwik.dev/router's own client navigation - the same one a `<Link>` uses - so
+// this lane reaches /hn-item WITHOUT a document reload.
+//
+// IT IS NOT ALONE IN THAT AND THIS PARAGRAPH USED TO SAY IT WAS: it called qwik
+// "the one lane of the six" that does it. MEASURED AT HEAD, sink by sink -
+// `demos/angular-official/src/app/hn-page.ts` hands the same trace to
+// `Router.navigateByUrl`, which is equally a client navigation and whose own
+// comment says so; react and solid call `window.location.assign`, which IS a
+// document navigation; svelte's `goto` and vue's `assign` are both guarded to
+// '/hn' because neither lane emits `HnItem`. The count is gone rather than
+// corrected, because nothing on disk recompiles how many lanes route on the
+// client. The logo and the wordmark reach /hn; a story's comments link reaches
+// /hn-item, which THIS LANE SHIPS and svelte and vue do not.
 //
 // WHAT IS STILL INERT, AND IT IS SEVENTEEN OF THIRTY-ONE STUBS RATHER THAN SIX:
 // `new`, `past`, the MASTHEAD `comments` (which is /newcomments, not a story's

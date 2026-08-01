@@ -86,8 +86,13 @@ function expectedEmittedFiles(goldenRoot = COMPILER_GOLDEN_ROOT): string[] {
 		.map((entry) => /^s(\d+)-[\w-]+\.json$/.exec(entry)?.[1])
 		.filter((digits): digits is string => digits !== undefined)
 		.map((digits) => resolve(GENERATED_ROOT, `S${digits}.ts`))
-		// The subtraction declared in `unbuilt-scenarios.ts`. `emitter.test.ts`
-		// asserts the underlying refusal is live, so this is not a skip list.
+		// THE SEAM FOR A REFUSED SCENARIO, AND IT SUBTRACTS NOTHING AT HEAD.
+		// `ANGULAR_UNBUILT_SCENARIOS` is EMPTY and `generated/S11.ts` and
+		// `generated/S12.ts` are BOTH on disk, since `frameless-app-fidelity-v1`
+		// T007 landed the globals allowlist and deleted its two rows. This is not
+		// a skip list and the emptiness is not unwatched: `emitter.test.ts` asserts
+		// the list EXACTLY empty and requires both formerly-refused goldens to
+		// EMIT. See `unbuilt-scenarios.ts`.
 		.filter((file) => !isUnbuiltEmitted(file))
 		.sort(byScenarioNumber);
 	// Fail LOUD rather than returning []. Two empty lists comparing equal is the
@@ -147,8 +152,14 @@ function diagnoseSource(source: string, filename = 'probe.ts'): string[] {
  * A planted authoring, emitted through the REAL pipeline - `buildEnrichedIr` then
  * `emit` then `formatEmitted`, the exact three calls `scripts/regenerate.ts`
  * makes. Nothing here is registered: no golden, no fixture, no `generated/` byte.
- * S8 is blocked on T046 and T047, and a golden alone would enlist a scenario into
- * every lane's derived gates at once.
+ *
+ * THAT SENTENCE USED TO GIVE A REASON THAT HAS SINCE EXPIRED - "S8 is blocked on
+ * T046 and T047" - AND IT IS FALSE AT HEAD. MEASURED: both repairs landed,
+ * `s8-async-handlers.tsrx` and `s8-async-handlers.json` ship, and every one of the
+ * six lanes carries a `generated/S8` artifact. The DURABLE half is the second
+ * clause and it is the only one this probe ever needed: registering a golden would
+ * enlist a scenario into every lane's derived gates at once, and this is a PROBE
+ * rather than a scenario. `HandlerProbe` is authored here and nowhere else.
  *
  * The awaited value is a PROMISE-VALUED PROP, per T043 §6. It must not be a free
  * global (`await Promise.resolve()`) because Angular's globals v-limit refuses
