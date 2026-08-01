@@ -213,14 +213,39 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// been tempted by - a per-`computed` accessor tax - is refuted a third time:
 	// S12 declares SEVEN computeds, one fewer than S11, while the node gap
 	// collapsed by 37.
-	// The scenario is also this table's first with NO ANGULAR TWIN besides S11:
-	// that lane refuses S12 on the same global-identifier ban, so `S12` exists in
-	// five `generated/` directories and not six.
+	// The scenario also HAS A TWIN IN EVERY ONE OF THE SIX CORPUS LANES.
+	// THIS ROW USED TO SAY THE OPPOSITE and it was true when it was written: it
+	// read "this table's first with NO ANGULAR TWIN besides S11: that lane refuses
+	// S12 on the same global-identifier ban", which made `S12` a scenario five
+	// lanes emitted and one did not. `frameless-app-fidelity-v1` T003 ruled a
+	// TWO-NAME allowlist - `Promise` and `setTimeout`, nothing else - and T007
+	// landed it. Measured at HEAD rather than inferred: `ANGULAR_UNBUILT_SCENARIOS`
+	// in packages/frameworks/angular/test/unbuilt-scenarios.ts is the empty array,
+	// and packages/frameworks/angular/generated/S12.ts is on disk, so S12 is ONE OF
+	// THE SEVEN SIX-LANE APPLICATIONS. Both of those counts are recompiled from
+	// scripts/demo.mjs at check time by ruling 11 in scripts/check-citations.mjs,
+	// so neither can rot here the way the sentence they replaced did.
 	S12: { physicalLoc: 362, structuralNodes: 1762 },
 	// S13 (the HACKER NEWS FRONT PAGE) IS THE CORPUS'S NEW HEAVYWEIGHT ON BOTH
-	// AXES, and the FIRST application row here with a twin in all SIX lanes -
-	// S11 and S12 exist in five `generated/` directories, S13 in six. Against
-	// S11, the previous heaviest in this lane: 599/440 = 1.36x the physical lines
+	// AXES, and it is ONE OF THE SEVEN SIX-LANE APPLICATIONS.
+	//
+	// THIS SENTENCE WAS THE ROOT OF TWO STALE FAMILIES AT ONCE, and its identical
+	// twin sat in packages/frameworks/react/test/size.test.ts. It read "the FIRST
+	// application row here with a twin in all SIX lanes - S11 and S12 exist in five
+	// `generated/` directories, S13 in six", and BOTH HALVES WERE FALSE. The
+	// position is the six-lane chain claim `frameless-app-fidelity-v1` T019 removed
+	// from twenty-one other files - S10 has a twin in every lane and always has, so
+	// nothing counted from here was ever right - and the clause supporting it
+	// belonged to the angular-refusal family: T020 measured the directories at HEAD
+	// and S11 and S12 are each in ALL SIX, since T007 closed the angular
+	// global-identifier hole. This copy was outside T019's scope, which is why that
+	// card corrected NEITHER: fixing one lane's copy of a sentence while leaving
+	// the other is the half-close T015 blocked rather than ship. Both moved
+	// together, in T020, and the count that replaced them is recompiled by ruling
+	// 11 in scripts/check-citations.mjs rather than copied out of a directory
+	// listing by hand.
+	//
+	// Against S11, the previous heaviest in this lane: 599/440 = 1.36x the physical lines
 	// and 2171/1930 = 1.12x the structural nodes, so the two ratios are 21% apart
 	// where every earlier application row agreed to within 6%. MEASURED CAUSE,
 	// not a guess: sixteen of the template's sixty-five hosts are

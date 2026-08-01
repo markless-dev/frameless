@@ -379,8 +379,11 @@ export default function App({ url }) {
       // corpus that all SIX lanes emit" and it never was: S10 has carried no
       // `unbuilt` entry in scripts/demo.mjs in any revision, and every stale
       // position in this family counted from this sentence.
-      // S11 and S12 lose angular to its
-      // global-identifier ban; S13 names no global at all, because every age is
+      // S11 and S12 USED TO LOSE ANGULAR to its
+      // global-identifier ban and `frameless-app-fidelity-v1` T007 closed that,
+      // so all SIX CORPUS LANES now emit all three. S13 NEVER NEEDED THAT REPAIR,
+      // and that difference is the durable half: it names no global at all,
+      // because every age is
       // a literal string in the seeded data rather than something computed from
       // `Date`. That is a constraint of the fixture, not a happy accident - see
       // packages/compiler/test/fixtures/s13-hn-front.tsrx constraint (9).

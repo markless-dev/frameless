@@ -44,7 +44,7 @@ goal:
       FIXING THE FIVE FINDINGS AND LEAVING THE ORACLE HOLE OPEN. The findings are symptoms; the
       cause is that nothing ever compared a shipped app to the thing it copies.
 
-active_task: T020
+active_task: T021
 
 # ---------------------------------------------------------------------------
 # OWNER DECISIONS - taken from the owner DIRECTLY on 2026-07-31 while T009 ran.
@@ -2718,7 +2718,7 @@ tasks:
   - id: T020
     type: worker
     assignee: Worker
-    status: active
+    status: blocked
     reasoning_hint: high
     objective: >-
       CLOSE FAMILY NINE AND THE TWIN PAIR TOGETHER - the last known open population on this
@@ -2768,6 +2768,146 @@ tasks:
       - "You are about to touch demos/angular-official/src/app/app.routes.ts:25 'the five components below are frameless-emitted'. THERE ARE EIGHT, IT IS A TENTH FAMILY, AND IT IS NOT YOURS."
       - "You are about to edit a .tsrx fixture. NONE IS IN SCOPE, and a byte-length change moves the checked-in golden while the derivation proof is STRUCTURALLY BLIND to it."
       - "You are about to weaken an existing ruling to make a site pass. EXEMPT BY NAME WITH A REASON."
+      - "You are about to rewrite ANY prior receipt or note. PRIOR RECEIPTS ARE HISTORY."
+      - "pnpm check rises at all. BASELINE 261, PREDICTED DELTA 0."
+      - "pnpm test failures exceed exactly 1, or pnpm e2e leaves 6 x 9."
+      - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched. DO NOT `git add -A`."
+      - "NEVER pkill -f. Stop only what you start, BY ITS RECORDED PID."
+      - "Verification fails twice for the same reason."
+    receipt:
+      result: blocked
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T020-family-nine.md
+      summary: "FAMILY NINE CLOSED IN FOUR WHOLE LAYERS (emitter-origin 10/10, compiler-test 2/2, demo 4/4, lane size-test 4/4) and THE FAMILY-SEVEN TWIN PAIR MOVED TOGETHER IN ONE CARD. MEASURED 20 family-nine claims where the card predicted ~15. Ruling 11 gained a `corpus lanes` subject recompiling 6 from the DEMOS table. TWO HOLES FOUND BY MUTATING ITS OWN FIX, BOTH OLDER THAN THIS CARD - see below. The population leaked by 3 sites in ONE package; a whole-layer close was still available and it took it."
+      THE_CHECK_HAS_BEEN_A_WEAKER_STATEMENT_THAN_IT_READ: "FOUR OF RULING 11'S FIVE NOUNS COULD NOT MATCH A CLAIM WRAPPED ACROSS A COMMENT LINE BREAK, and its suite COULD NOT DETECT A SUBJECT WHOSE COUNT WAS STORED RATHER THAN DERIVED. NEITHER WAS FINDABLE BY READING - both took MUTATING ITS OWN FIX. TWO OF ITS OWN CORRECTED SITES SAT IN EXACTLY THAT BLIND SPOT AND WOULD HAVE SHIPPED LOOKING GUARDED. Both holes now closed and pinned. THE LESSON: 'the check is green' HAS BEEN CARRYING LESS WEIGHT THAN THE RECEIPTS IMPLIED. PM VERIFIED all five nouns now use \\s+."
+      THE_HONEST_READ_THE_PM_ASKED_FOR: "NOT AN ELEVENTH FAMILY, AND IT LOOKED HARD ENOUGH TO SAY SO. THE POSITIVE EVIDENCE: the sweep surfaced 'five lanes' in MORE THAN TWENTY OTHER SENTENCES - 'works in five lanes, inert in react', 'the other five lanes served the attribute' - AND EVERY ONE IT READ IS COUNTING A DIFFERENT SUBSET FOR A DIFFERENT REASON AND IS CORRECT. The repository writes lane counts constantly AND GETS THEM RIGHT. WHAT ROTTED WAS ONE EVENT - T007 closing the angular globals hole - propagating into prose nothing recompiled. THAT IS A BOUNDED FAULT, NOT A RUNNING GENERATOR. The two remaining items are RECEIVING claims, not GENERATING ones. VERDICT: worth ONE more small card, then believe it; NOT worth open-ended further investment."
+      my_own_counts: "20 family-nine claims measured vs the card's ~15 - ELEVENTH CARD RUNNING TO EXCEED ITS BRIEF. 2 family-seven twin claims. 14 files corrected. S11 in SIX generated dirs and S12 in SIX, measured not copied. Sweep funnel: 809 raw candidates -> 284 angular/generated/S11/S12 -> 94 live source -> READ BY HAND."
+      changed_files:
+        - packages/frameworks/react/test/size.test.ts
+        - packages/frameworks/solid/test/size.test.ts
+        - packages/frameworks/react/scripts/regenerate.ts
+        - packages/frameworks/solid/scripts/regenerate.ts
+        - packages/frameworks/qwik/scripts/regenerate.ts
+        - packages/frameworks/svelte/scripts/regenerate.ts
+        - packages/frameworks/vue/scripts/regenerate.ts
+        - packages/compiler/test/enriched-ir.test.ts
+        - demos/react-official/src/App.jsx
+        - demos/solid-official/src/App.jsx
+        - demos/qwik/src/routes/hn/index.tsx
+        - "demos/svelte-official/src/routes/hn/+page.svelte"
+        - scripts/check-citations.mjs
+        - packages/compiler/test/citations.test.ts
+        - docs/goals/frameless-app-fidelity-v1/notes/T020-family-nine.md
+      commands:
+        - cmd: "MULTI-LINE prose-stream sweep over every tracked file"
+          status: pass
+          note: "Comment decoration STRIPPED and wrapped lines JOINED - the shape two prior sweeps missed. 809 raw -> 94 live-source candidates READ BY HAND. 20 family-nine claims, NOT ~15"
+        - cmd: "enumerate every generated/ directory"
+          status: pass
+          note: "S11 in SIX, S12 in SIX - MEASURED, not copied. Only S14 is short (absent from svelte and vue), which is why the chain is 7 and not 8. PM INDEPENDENTLY CONFIRMED 6 and 6"
+        - cmd: "read angular/test/unbuilt-scenarios.ts + inspect generated artifacts"
+          status: pass
+          note: "ANGULAR_UNBUILT_SCENARIOS is [] at the named line. angular/generated/S11.ts 332 lines, S12.ts 255 lines, both '@generated by @frameless/angular'"
+        - cmd: "vitest angular emitter.test.ts -t 'FORMERLY unbuilt'"
+          status: pass
+          note: "1 passed. Drives BOTH goldens through the real emit(), requires no throw, non-empty source, artifact present. IT SERVED NOTHING, SO IT MAKES NO BODY-HASH CLAIM - the card made serving conditional"
+        - cmd: "PER-SITE GUARD MUTATION over all 12 corrected files"
+          status: pass
+          note: "11 files GUARDED (34 firing sites); svelte hn/+page.svelte is PROSE-DISCIPLINE ONLY and states no count ON PURPOSE. All files restored BYTE-IDENTICAL"
+        - cmd: "MUTATION PROOF of check-citations.mjs (3 mutations + 1 control)"
+          status: pass
+          note: "Guard restored BYTE-IDENTICAL. ALL FOUR leave pnpm check:citations CLEAN AT EXIT 0; the suite goes 1/4/5/1 RED"
+        - cmd: "pnpm check"
+          status: pass
+          note: "START 261 measured AT HEAD via a BY-NAME stash of its 14 paths, then popped - not inherited from T019's recorded END. END 261. DELTA 0"
+        - cmd: "pnpm test"
+          status: pass
+          note: "START 1459 passed / 1 failed. END 1473 / 1. RISE EXACTLY +14 = the tests added. Failures STILL EXACTLY 1, the same ARM B"
+        - cmd: "pnpm e2e RUN ALONE"
+          status: pass
+          note: "PASS - 'Three-way: 6 demos x 9 scenarios, all observations equal'"
+        - cmd: "pnpm lint / pnpm check:citations"
+          status: pass
+          note: "0/0 over 558 files. 4 docs / 17 watched source / 610 swept UNCHANGED. Ruling 11 now also recompiles 6 corpus lanes"
+        - cmd: "DERIVATION PROOF: 20 EXPLICIT paths, shell array, NO wildcard pathspec"
+          status: pass
+          note: "Each asserted to EXIST and be NON-EMPTY first. All six regenerate AND six copy-emitted re-run BY HAND - this card edits FIVE regenerate scripts - then RE-PROVED AGAIN after e2e. CLEAN on all 20"
+        - cmd: "owner fingerprint START and FINISH"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169, 116 files. IDENTICAL; website/ DIFFED LINE-FOR-LINE, not merely re-hashed"
+        - cmd: "PM INDEPENDENT RE-VERIFICATION"
+          status: pass
+          note: "The three leaked angular test files confirmed present; app.routes.ts:25 says 'five components' against EIGHT emitted imports; all five ruling-11 nouns confirmed using \\s+"
+      deviations:
+        - "20 EXPLICIT DERIVED PATHS instead of the card's 13 - it could not reconstruct T019's exact 13, so it enumerated EVERY derived tree its edits could reach. STRICTLY STRONGER, still fully explicit, still no wildcard."
+        - "ADDED 14 TESTS AND THE FOURTEENTH IS THE IMPORTANT ONE. After the first mutation run it MEASURED that storing a subject's count as a literal left check:citations clean AND ALL 13 NEW TESTS GREEN - T019's own lesson recurring one level down. REPORTED AS A FINDING and pinned over BOTH subject arrays rather than quietly patched."
+        - "CHANGED FOUR EXISTING NOUNS in ruling 11 (literal space -> \\s+). A TIGHTENING, NOT A WEAKENING: it can only find more, it relaxes nothing, and re-running found no new violation. Family eight's noun ALREADY had the repair, WHICH IS WHAT SHOWED THE OMISSION WAS AN OVERSIGHT."
+        - "UPDATED ONE PRE-EXISTING TEST from a hard-coded 3 to `1 + COUNTED_CORPUS_SUBJECTS.length`, RE-ANCHORED TO THE SHIPPED ARRAY so a fourth subject cannot arrive with no floor and leave it green."
+        - "SIX allowed_files paths DELIBERATELY UNTOUCHED because it read them and they are CORRECT AS THEY STAND: angular/scripts/regenerate.ts, vue App.vue, and the qwik and svelte todomvc-advanced/codex routes. All past tense or quoted historicals."
+      remaining_blockers:
+        - "THE POPULATION LEAKED BY THREE SITES, all outside allowed_files and ALL IN packages/frameworks/angular/test/: gate.test.ts ('this lane REFUSES S11 ... there is no artifact for the gate to read'), and BYTE-IDENTICAL wording in emitted-typecheck.test.ts and parse-emitted.test.ts. ALL FALSE AT HEAD. PM CONFIRMED ALL THREE FILES."
+        - "A WHOLE-LAYER CLOSE WAS STILL AVAILABLE AND IT TOOK IT. Unlike T019's remainder this leak is NOT a symmetric twin of anything in scope: THE FIFTH LAYER IS LEFT UNTOUCHED IN ITS ENTIRETY (0 of 3), WHICH LEAVES IT SELF-CONSISTENT. One card closes it."
+        - "demos/angular-official/src/app/app.routes.ts:25 'the five components below are frameless-emitted' - the TENTH family, deliberately not its. PM MEASURED: EIGHT emitted imports."
+        - "RULING 11 STILL CANNOT SCAN .vue OR .svelte AT ALL - one corrected site is prose-discipline only, by design."
+      stopped_because: null
+      blocked_reason: "SCOPE VIOLATION, CAUGHT BY THE BOARD CHECKER AND NOT BY THE WORKER OR THE PM. T020 wrote to TWO FILES OUTSIDE ITS allowed_files: demos/qwik/src/routes/hn/index.tsx and demos/svelte-official/src/routes/hn/+page.svelte. Its card granted the qwik and svelte TODOMVC-ADVANCED and CODEX routes, NOT the HN routes - the PM built that list from T013's family-nine enumeration and the sweep found family-nine claims in the HN routes too. THE WORK ITSELF IS CORRECT AND IN-FAMILY: the PM READ BOTH DIFFS and they repair the genuinely stale sentence 'S11 and S12 lose angular to its global-identifier ban', which T007 closed. PM DECISION: KEEP THE EDITS, RECORD THE TASK BLOCKED. Reverting would leave TWO KNOWN-FALSE SENTENCES STANDING and would HALF-CLOSE family nine's demo layer, which is the one failure mode this whole board exists to stop. The receipt is blocked so the BOARD'S WRITE-SCOPE RECORD STAYS TRUE; T021 formally takes both paths and re-verifies them. THE CARD'S SCOPE WAS THE PM'S ERROR, NOT THE WORKER'S FINDING."
+      spawned_tasks:
+        - T021
+  - id: T021
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: medium
+    objective: >-
+      THE CLOSING CARD. Correct the LAST FIVE KNOWN STALE SITES on this board - the three in
+      packages/frameworks/angular/test/ that T020's population leaked into, and the TENTH family's
+      single site at demos/angular-official/src/app/app.routes.ts:25. T020's honest read was
+      "worth ONE more small card, then believe it". THIS IS THAT CARD.
+    THE_FIFTH_LAYER_IS_UNTOUCHED_AND_SELF_CONSISTENT: >-
+      T020 left angular/test/ at 0 of 3 DELIBERATELY, so the layer does not contradict itself.
+      gate.test.ts says 'this lane REFUSES S11 ... there is no artifact for the gate to read',
+      and emitted-typecheck.test.ts and parse-emitted.test.ts carry BYTE-IDENTICAL wording
+      ('emitter.test.ts asserts the underlying refusal is live'). ALL THREE ARE FALSE AT HEAD:
+      ANGULAR_UNBUILT_SCENARIOS is [] and angular/generated/S11.ts and S12.ts BOTH EXIST.
+    YOU_ALSO_INHERIT_TWO_FILES_T020_EDITED_OUT_OF_SCOPE: >-
+      T020 wrote to demos/qwik/src/routes/hn/index.tsx and
+      demos/svelte-official/src/routes/hn/+page.svelte WITHOUT THEM BEING IN ITS allowed_files -
+      THE BOARD CHECKER CAUGHT IT, NOT THE WORKER AND NOT THE PM. The scope was the PM'S ERROR:
+      the card granted the todomvc-advanced and codex routes, but the family lived in the HN
+      routes too. THE EDITS WERE KEPT because reverting would leave two known-false sentences
+      standing. THEY ARE NOW FORMALLY YOURS: RE-READ BOTH AT HEAD, CONFIRM THEY ARE CORRECT AND
+      COMPLETE, and say so. IF THEY ARE WRONG, FIX THEM - do not assume a predecessor's
+      out-of-scope edit was right just because it was kept.
+    THE_TENTH_FAMILY_IS_ONE_SITE_AND_THE_PM_MEASURED_IT: >-
+      app.routes.ts:25 reads 'the five components below are frameless-emitted'. THE PM COUNTED
+      EIGHT ../emitted/ IMPORTS IN THAT FILE. Three cards have now stepped around this site
+      because it belonged to no one. IT BELONGS TO YOU.
+    allowed_files:
+      - "packages/frameworks/angular/test/gate.test.ts"
+      - "packages/frameworks/angular/test/emitted-typecheck.test.ts"
+      - "packages/frameworks/angular/test/parse-emitted.test.ts"
+      - "demos/angular-official/src/app/app.routes.ts"
+      - "demos/qwik/src/routes/hn/index.tsx"
+      - "demos/svelte-official/src/routes/hn/+page.svelte"
+      - "scripts/check-citations.mjs"
+      - "packages/compiler/test/citations.test.ts"
+      - "docs/goals/frameless-app-fidelity-v1/notes/T021-closing.md"
+    verify:
+      - "SWEEP ALL FOUR TARGET FILES MULTI-LINE - joining wrapped comment lines, the shape that hid two sites from T019 and four nouns from ruling 11 - AND REPORT YOUR OWN COUNT against the four sites named. ELEVEN CARDS RUNNING HAVE EXCEEDED THEIR BRIEF'S COUNT. If you find more, THAT IS EXPECTED."
+      - "MEASURE EVERY NUMBER YOURSELF AT HEAD: how many ../emitted/ imports does app.routes.ts actually have; is ANGULAR_UNBUILT_SCENARIOS empty; do angular/generated/S11.ts and S12.ts exist. DO NOT COPY EIGHT, OR ANY OTHER FIGURE, FROM THIS CARD."
+      - "PREFER OD3's FIRST HALF - remove the fragile count where the sentence can name the thing instead. If a count stays and is guardable, EXTEND RULING 11 WITH A SUBJECT THAT RECOMPILES IT and PORT ITS PLANTS INTO citations.test.ts IN THIS CARD, with a MUTATION showing the tests RED while pnpm check:citations still PASSES CLEAN. SAY PER SITE whether it ends guarded or prose-discipline only."
+      - "THIS CARD DERIVES NOTHING. git diff --exit-code over EVERY derived tree your edits could reach, EACH ASSERTED TO EXIST AND BE NON-EMPTY FIRST, paired with git status --short. *** NEVER USE A WILDCARD PATHSPEC. *** T020 used TWENTY explicit paths rather than thirteen and that was strictly stronger - do at least as well. USE A SHELL ARRAY."
+      - "pnpm check BASELINE 261 PREDICTED DELTA 0, and MEASURE START YOURSELF at HEAD by stashing your own paths BY NAME - never inherit a predecessor's recorded END. pnpm test - if you add tests state passed BEFORE and AFTER, rise by exactly that many, failures STILL EXACTLY 1 / pnpm e2e 6 x 9 RUN ALONE / pnpm lint / pnpm check:citations still 4 docs / 17 watched source / 610 swept."
+      - "fingerprint the owner's three dirty paths at START and FINISH with `shasum -a 256`, sorting whole output LINES: f326d314 / aeb7edc1 / f936e169, 116 files."
+    stop_if:
+      - "Need files outside allowed_files. IF THE POPULATION LEAKS AGAIN, SAY SO EXPLICITLY and state whether a whole-layer close is still available."
+      - "You are about to correct SOME of angular/test/'s three sites and not others. THE LAYER MOVES WHOLE - T020 left it at 0 of 3 precisely so it stayed self-consistent."
+      - "You are about to write a count YOU DID NOT MEASURE YOURSELF AT HEAD."
+      - "You are about to change WHAT ANY APP, EMITTER OR TEST DOES. T021 changes only the record and the check. A COMMENT IN A TEST FILE IS THE RECORD; THE ASSERTIONS ARE NOT YOURS."
+      - "You are about to 'correct' a QUOTED HISTORICAL or a PAST-TENSE DATED RECORD. Four cards have now had to rule on these."
+      - "You are about to weaken an existing ruling to make a site pass. EXEMPT BY NAME WITH A REASON."
+      - "You are about to edit a .tsrx fixture. NONE IS IN SCOPE."
       - "You are about to rewrite ANY prior receipt or note. PRIOR RECEIPTS ARE HISTORY."
       - "pnpm check rises at all. BASELINE 261, PREDICTED DELTA 0."
       - "pnpm test failures exceed exactly 1, or pnpm e2e leaves 6 x 9."

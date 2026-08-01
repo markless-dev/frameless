@@ -1277,7 +1277,19 @@ export const COUNTED_CORPUS_SUBJECTS = [
 		// nouns, and no tight rule can read a number out of them. So the fix names the
 		// class once and the guard checks THAT name. It appears nowhere in this
 		// repository except where a card has stated the count deliberately.
-		noun: String.raw`six-lane applications?`,
+		// EVERY LITERAL SPACE IN A NOUN IS `\s+`, AND THAT IS A REPAIR T020 FOUND BY
+		// MUTATING ITS OWN FIX RATHER THAN BY READING. `proseStream` joins wrapped
+		// comment lines with a space AND leaves the space that follows `//`, so a noun
+		// straddling a line break arrives as `SIX-LANE  APPLICATIONS` with TWO spaces
+		// and a literal single space cannot match it. Measured at HEAD: a WRONG count
+		// written flat fired, and the SAME wrong count wrapped between the two words of
+		// the noun was INVISIBLE - in four of the five subjects here. Family eight's
+		// `wrappers?(?:\s+components?)?` was already written this way and DID fire
+		// across the wrap, which is what showed the omission was an oversight and not a
+		// ruling. Two of T020's own corrected sites wrapped exactly there and would have
+		// LOOKED guarded while being unwatched. It is a TIGHTENING like every widening
+		// before it: it can only find MORE, and it relaxes nothing.
+		noun: String.raw`six-lane\s+applications?`,
 		positionIsDerivable: false,
 		// THIS FAMILY NEVER WROTE "of", WHICH IS WHY THE BRIDGE IS ITS OWN. Family eight
 		// said "the FIFTH of five wrapper components"; family seven said "the THIRD
@@ -1292,8 +1304,41 @@ export const COUNTED_CORPUS_SUBJECTS = [
 			"the SCENARIOS rows in scripts/demo.mjs with no `unbuilt` entry in any DEMOS lane",
 	},
 	{
+		subject: 'corpus lanes',
+		// A THIRD NOUN THIS REPOSITORY DID NOT HAVE, ADDED BY T020 FOR THE SAME REASON
+		// THE FIRST ONE WAS. Family nine - "the angular emitter refuses S11 and S12" -
+		// was corrected in eighteen places, and the sentence that replaces almost every
+		// one of them has to say how many lanes DO emit them. That number is SIX today,
+		// it is written into the record by hand at every one of those sites, and until
+		// this subject existed NOTHING RECOMPILED IT: a seventh lane would have re-rotted
+		// the whole family in a single commit, which is precisely the generator ruling 11
+		// exists to break.
+		//
+		// WHY NOT THE BARE WORD `lanes`, WHICH IS HOW THE PROSE USUALLY SPELLS IT. It was
+		// MEASURED and it is unusable. This repository writes "five lanes" in more than
+		// twenty correct sentences - "works in five lanes, inert in react", "the other
+		// five lanes served the attribute", "five lanes re-enter it" - each counting a
+		// DIFFERENT subset for a DIFFERENT reason, none of them the size of the corpus.
+		// A rule on `lanes` would fire on every one of them, which is the "cries wolf on
+		// ordinary prose" failure ruling 9 declined to risk. So the fix names the class
+		// once, the noun appears NOWHERE ELSE in the repository, and the guard checks
+		// THAT name - the same move family seven made with `six-lane applications`.
+		//
+		// POSITION IS ALLOWED, AND THE ASYMMETRY IS THE MEASUREMENT RULING 11 ALREADY
+		// MADE TWICE. A lane's slot is its position in the DEMOS table, handed out in one
+		// order with no second basis to guess at, exactly like a corpus application's
+		// ordinal slot. The six-lane chain forbids position because its ARRIVAL order and
+		// its TABLE order genuinely disagree - S11 and S12 entered it long after S13. No
+		// such conflict exists here, and forbidding a position no sentence in this
+		// repository writes would be inventing a rule rather than recompiling a number.
+		noun: String.raw`corpus\s+lanes?`,
+		positionIsDerivable: true,
+		derive: () => corpusLanes(),
+		derivedFrom: "the DEMOS rows in scripts/demo.mjs, in that table's own order",
+	},
+	{
 		subject: 'corpus applications',
-		noun: String.raw`corpus applications?`,
+		noun: String.raw`corpus\s+applications?`,
 		// POSITION IS ALLOWED HERE, AND THE ASYMMETRY IS THE SAME MEASUREMENT RULING 11
 		// ALREADY MADE FOR ROUTES. An application's position is its ORDINAL SLOT - S10 is
 		// the first, S17 the eighth - and the slots are handed out in table order with no
@@ -1327,7 +1372,7 @@ export const COUNTED_ANGULAR_SUBJECTS = [
 	},
 	{
 		subject: 'application routes',
-		noun: String.raw`application routes?`,
+		noun: String.raw`application\s+routes?`,
 		positionIsDerivable: true,
 		derive: () => angularApplicationRoutes(),
 		derivedFrom: "the non-contract `path` entries in that lane's own app.routes.ts",

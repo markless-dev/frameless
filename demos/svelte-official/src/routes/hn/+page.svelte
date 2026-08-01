@@ -31,8 +31,13 @@
 	APPLICATIONS. This header used to call it "the FIRST in this corpus that all
 	SIX lanes emit" and it never was: S10 has carried no `unbuilt` entry in
 	scripts/demo.mjs in any revision, and every stale position in this family
-	counted from this sentence. S11 and S12 lose angular to its
-	global-identifier ban; S13 names no global anywhere, because every relative
+	counted from this sentence. S11 and S12 USED TO LOSE ANGULAR to its
+	global-identifier ban and `frameless-app-fidelity-v1` T007 closed that, so
+	EVERY LANE now emits all three. NO NUMBER IS WRITTEN IN THAT SENTENCE ON
+	PURPOSE: ruling 10's sweep is a JS lexer, so this `.svelte` file is invisible to
+	`pnpm check:citations` and a count here would look guarded without being it.
+	S13 NEVER NEEDED THAT REPAIR, and that difference is the durable half: it names
+	no global anywhere, because every relative
 	age is a literal string in the seeded data rather than something computed from
 	`Date`. That is a constraint of the fixture, not luck.
 

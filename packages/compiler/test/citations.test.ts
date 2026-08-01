@@ -1045,12 +1045,27 @@ describe('T053 citation-ordinal guard', () => {
 
 		// The SHIPPED subjects — shipped nouns, shipped position and count rules — with
 		// only the derivation repointed. Overriding a regex would test a copy of the guard.
+		//
+		// REPOINTED BY SUBJECT NAME, NOT BY `positionIsDerivable`. T019 keyed on that
+		// flag because the two subjects it shipped happened to differ on it. T020's
+		// `corpus lanes` ALSO allows position, so the flag stopped identifying a subject
+		// the moment a third one arrived — it would have handed the lane count the
+		// APPLICATION derivation and quietly tested the wrong number.
+		const derivations: Record<string, (file: string) => string[]> = {
+			'six-lane applications': sixLaneApplications,
+			'corpus applications': corpusApplications,
+			'corpus lanes': corpusLanes,
+		};
 		const subjectsFor = (file: string) =>
-			COUNTED_CORPUS_SUBJECTS.map((subject) =>
-				subject.positionIsDerivable
-					? { ...subject, derive: () => corpusApplications(file) }
-					: { ...subject, derive: () => sixLaneApplications(file) },
-			);
+			COUNTED_CORPUS_SUBJECTS.map((subject) => {
+				const derive = derivations[subject.subject];
+				if (derive === undefined)
+					throw new Error(
+						`no synthetic derivation for the subject "${subject.subject}". A new subject ` +
+							'must be repointed here, or this suite silently tests the repository instead.',
+					);
+				return { ...subject, derive: () => derive(file) };
+			});
 
 		/** The claim always lands on LINE 6, inside a doc comment, with code either side. */
 		const planted = (claim: string) =>
@@ -1165,6 +1180,110 @@ describe('T053 citation-ordinal guard', () => {
 		});
 
 		/**
+		 * T020's SUBJECT — THE LANE COUNT ITSELF. Family nine was corrected in eighteen
+		 * places and almost every replacement sentence states how many lanes DO emit the
+		 * scenario. That number was written by hand at every site and recompiled nowhere,
+		 * which is the same generator ruling 11 broke for the chain.
+		 */
+		describe('T020 the corpus-lane subject — the number family nine had to write down', () => {
+			test('a stale lane count fires, with its site and its recompiled reason', () => {
+				const found = scanPlant('all SIX CORPUS LANES carry this scenario');
+				expect(siteOf(found)).toEqual([`${file}:6 stale-derived-count`]);
+				expect(found[0].reason).toContain('This prose says 6 corpus lanes; the source has 3');
+				// The reason NAMES them, in the table's own order, so a reader never re-derives.
+				expect(found[0].reason).toContain('alpha, beta, gamma');
+			});
+
+			test('the correct count is GREEN', () => {
+				expect(scanPlant('all THREE CORPUS LANES carry this scenario')).toEqual([]);
+			});
+
+			test('A POSITION AMONG THE LANES IS ALLOWED, for the applications’ reason', () => {
+				// A lane's slot is its position in the DEMOS table, handed out in one order
+				// with no second basis. The chain forbids position because its ARRIVAL and
+				// TABLE orders genuinely disagree; no such conflict exists here, and
+				// forbidding prose nobody writes would be inventing a rule.
+				expect(scanPlant('angular is the SIXTH corpus lane')).toEqual([]);
+			});
+
+			/**
+			 * THE MEASUREMENT THAT DECIDED THE NOUN. The bare word `lanes` is unusable:
+			 * this repository writes "five lanes" in more than twenty CORRECT sentences,
+			 * each counting a different subset for a different reason. A rule on it would
+			 * red-flag every one — the "cries wolf on ordinary prose" failure ruling 9
+			 * declined to risk — so the noun is qualified and these must stay GREEN.
+			 */
+			for (const claim of [
+				'DRAG A CARD ONTO ANOTHER COLUMN HERE AND IT STAYS. Five lanes do this; REACT does not',
+				'the other five lanes served the attribute',
+				'five lanes re-enter it, and the Angular router declines a same-URL navigation',
+				'S16’s axis is on its page now, in five of six lanes, so the contrast is WITHDRAWN',
+			])
+				test(`the BARE WORD is not this subject — "${claim.slice(0, 46)}…"`, () => {
+					expect(scanPlant(claim)).toEqual([]);
+				});
+		});
+
+		/**
+		 * T020 FOUND THIS BY MUTATING ITS OWN FIX, NOT BY READING — and it had already
+		 * bitten two of the sites that card corrected.
+		 *
+		 * `proseStream` joins wrapped comment lines with a space AND keeps the space that
+		 * follows `//`, so a noun straddling a line break arrives with TWO spaces in it.
+		 * Every multi-word noun spelled with a LITERAL space therefore went silent exactly
+		 * where an author had reflowed the claim. Family eight's noun was already written
+		 * `wrappers?(?:\s+components?)?` and DID fire across the wrap, which is what showed
+		 * this was an oversight rather than a ruling.
+		 */
+		describe('T020 a noun that wraps mid-phrase is still the noun', () => {
+			const wrapped = (claim: string[]) =>
+				scanCountedSubjects(
+					commentsOnly(['/**', ...claim.map((line) => ` * ${line}`), ' */'].join('\n')),
+					file,
+					subjectsFor(table),
+				);
+
+			test('THE EXACT SHAPE THAT ESCAPED: a stale count split between the two words', () => {
+				// This is `packages/compiler/test/enriched-ir.test.ts` as T020 first wrote it.
+				expect(siteOf(wrapped(['It is ONE OF THE SEVEN SIX-LANE', 'APPLICATIONS in this corpus.']))).toEqual([
+					`${file}:2 stale-derived-count`,
+				]);
+			});
+
+			test('and the correct count wrapped the same way is still GREEN', () => {
+				expect(wrapped(['It is ONE OF THE THREE SIX-LANE', 'APPLICATIONS in this corpus.'])).toEqual([]);
+			});
+
+			test('the lane noun wraps too, and so does the application noun', () => {
+				expect(siteOf(wrapped(['carried by all SIX CORPUS', 'LANES today.']))).toEqual([
+					`${file}:2 stale-derived-count`,
+				]);
+				expect(siteOf(wrapped(['this corpus has NINE CORPUS', 'APPLICATIONS today.']))).toEqual([
+					`${file}:2 stale-derived-count`,
+				]);
+			});
+
+			test('A WRAPPED POSITION FIRES TOO — the position half had the same hole', () => {
+				expect(siteOf(wrapped(['it is the THIRD SIX-LANE', 'APPLICATION here.']))).toEqual([
+					`${file}:2 underivable-position`,
+				]);
+			});
+
+			test('FAMILY EIGHT IS BYTE-FOR-BYTE UNCHANGED — it never had the hole', () => {
+				// The angular subjects are NOT repointed: this asserts the shipped rule over
+				// the shipped derivation, which is the copy the repository actually runs.
+				const found = scanCountedSubjects(
+					commentsOnly(['/**', ' * the SECOND of two WRAPPER', ' * COMPONENTS in this lane.', ' */'].join('\n')),
+					file,
+				);
+				expect(found.map((violation) => violation.kind)).toEqual([
+					'underivable-position',
+					'stale-derived-count',
+				]);
+			});
+		});
+
+		/**
 		 * THE DERIVATION IS LIVE, NOT STORED. A guard carrying its own copy of "seven"
 		 * passes every test above and still certifies a stale tree the day the table moves.
 		 */
@@ -1203,14 +1322,17 @@ describe('T053 citation-ordinal guard', () => {
 				expect(corpusChainIntegrityProblems()).toEqual([]);
 			});
 
-			test('a table whose slice finds NOTHING is refused under both floors', () => {
+			test('a table whose slice finds NOTHING is refused under EVERY floor', () => {
 				const gutted = join(dir, 'demo-gutted.mjs');
 				writeFileSync(gutted, '// the tables were renamed\nconst ROWS = [\n];\n');
 				const problems = corpusChainIntegrityProblems(gutted, subjectsFor(gutted));
-				expect(problems).toHaveLength(3);
+				// Asserted against the SHIPPED subject count rather than a literal, so a
+				// fourth subject cannot arrive with no floor and leave this test still green.
+				expect(problems).toHaveLength(1 + COUNTED_CORPUS_SUBJECTS.length);
 				expect(problems[0]).toContain('derivation of the lanes found 0');
 				expect(problems[1]).toContain('six-lane applications found 0');
-				expect(problems[2]).toContain('corpus applications found 0');
+				expect(problems[2]).toContain('corpus lanes found 0');
+				expect(problems[3]).toContain('corpus applications found 0');
 			});
 
 			test('a table that has MOVED is refused rather than passing over nothing', () => {
@@ -1272,6 +1394,58 @@ describe('T053 citation-ordinal guard', () => {
 						),
 					),
 				).toEqual([`${file}:6 underivable-position`]);
+			});
+
+			/**
+			 * T020 — NOTHING IN THE GUARD STORES A COUNT, ASSERTED OVER EVERY SUBJECT.
+			 *
+			 * THIS IS T019's OWN LESSON RECURRING ONE LEVEL DOWN, AND T020 FOUND IT THE
+			 * SAME WAY: BY MUTATING. Replacing a subject's `derive` with a STORED ARRAY OF
+			 * TODAY'S CORRECT LENGTH left `pnpm check:citations` clean AND THE WHOLE SUITE
+			 * GREEN — including the two tests written to travel the shipped path, because
+			 * they assert `the source has ${live()}` and a stored copy of today's answer
+			 * agrees with it exactly. Every other test repoints `derive`, so none of them
+			 * can see the property at all.
+			 *
+			 * THE HOLE WAS NOT T020's ALONE: the identical mutation against family seven's
+			 * and family eight's subjects was equally invisible. So this pins the property
+			 * ruling 11's header actually claims — "Nothing in this file stores the number"
+			 * — over EVERY subject in BOTH arrays, present and future. A subject added
+			 * later with a literal in it fails here on the day it lands.
+			 */
+			test('T020 EVERY subject DERIVES — a stored array is refused by shape', () => {
+				const subjects = [...COUNTED_CORPUS_SUBJECTS, ...COUNTED_ANGULAR_SUBJECTS];
+				expect(subjects.length).toBeGreaterThanOrEqual(5);
+				for (const subject of subjects) {
+					// The body must be a CALL, not a literal: `() => corpusLanes()` passes,
+					// `() => ['react', 'solid', …]` and `() => 6` do not.
+					expect(
+						subject.derive.toString(),
+						`the "${subject.subject}" subject must CALL a derivation, not carry one`,
+					).toMatch(/^\(\s*\)\s*=>\s*[A-Za-z_$][\w$]*\s*\(/);
+					// And it must actually answer with the population, not an empty list.
+					expect(subject.derive().length).toBeGreaterThan(1);
+				}
+			});
+
+			test('T020 the lane subject travels the shipped path too, wrapped and flat', () => {
+				// Same discipline as the two above: a numeral no corpus will reach, so the
+				// assertion cannot pass by coinciding with the repository's own six.
+				const flat = scanCountedSubjects(
+					commentsOnly(planted('carried by all 99 corpus lanes')),
+					file,
+					COUNTED_CORPUS_SUBJECTS,
+				);
+				expect(siteOf(flat)).toEqual([`${file}:6 stale-derived-count`]);
+				expect(flat[0].reason).toContain(`the source has ${corpusLanes().length}`);
+
+				// And through the wrap, which is where T020's own sites lived.
+				const wrapped = scanCountedSubjects(
+					commentsOnly(['/**', ' * carried by all 99 CORPUS', ' * LANES today.', ' */'].join('\n')),
+					file,
+					COUNTED_CORPUS_SUBJECTS,
+				);
+				expect(siteOf(wrapped)).toEqual([`${file}:2 stale-derived-count`]);
 			});
 		});
 

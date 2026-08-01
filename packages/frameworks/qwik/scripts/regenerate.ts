@@ -32,19 +32,36 @@ const fixtures = [
 	// THE SECOND APPLICATION IN THE CORPUS - TodoMVC ADVANCED - and it takes the
 	// next ORDINAL slot for exactly the reason the row above records: the suites
 	// derive their inventory from /^s(\d+)-[\w-]+\.json$/ and assert it EXACTLY.
-	// It is the first corpus scenario that does NOT emit in all six lanes - the
-	// angular emitter refuses it on its global-identifier ban, recorded verbatim
-	// in that lane's regenerate.ts - and, like S10, it stays out of the 6 x 9
+	// IT IS ONE OF THE SEVEN SIX-LANE APPLICATIONS, and this row used to say the
+	// opposite: "the first corpus scenario that does NOT emit in all six lanes -
+	// the angular emitter refuses it on its global-identifier ban". THAT WAS TRUE
+	// WHEN IT WAS WRITTEN AND IT IS FALSE NOW. `frameless-app-fidelity-v1` T003
+	// ruled a TWO-NAME allowlist - `Promise` and `setTimeout`, nothing else - and
+	// T007 landed it, so `ANGULAR_UNBUILT_SCENARIOS` in
+	// packages/frameworks/angular/test/unbuilt-scenarios.ts is the empty array and
+	// all SIX CORPUS LANES carry this scenario in their `generated/` directory.
+	// THE BAN ITSELF IS STILL REAL and still refuses every other global - `Date`,
+	// `JSON`, `Math`, `console`, `fetch`, `localStorage` and `document` have zero
+	// instances in authored executable code and stay out - which is argued at
+	// `TRANSPLANTED_GLOBALS` in packages/frameworks/angular/src/emitter/index.ts.
+	// Both counts above are recompiled from scripts/demo.mjs at check time by
+	// ruling 11 in scripts/check-citations.mjs, so neither can rot here the way
+	// the sentence they replaced did. Like S10, it stays out of the 6 x 9
 	// three-way contract, which scripts/e2e.mjs pins to the literal ['s1'..'s9'].
 	['S11.tsx', 's11-todomvc-advanced.json'],
 	// THE THIRD APPLICATION IN THE CORPUS - the CODEX CLONE - and it takes the next
 	// ORDINAL slot for exactly the reason the two rows above record: the suites
 	// derive their inventory from /^s(\d+)-[\w-]+\.json$/ and assert it EXACTLY.
 	// Like S10 and S11 it stays OUT of the 6 x 9 three-way contract, which
-	// scripts/e2e.mjs pins to the literal ['s1'..'s9']. It is the SECOND scenario
-	// the angular emitter refuses, on the same global-identifier ban recorded in
-	// that lane's regenerate.ts: its streamed answer separates three unrolled
-	// chunks with `new Promise` + `setTimeout`.
+	// scripts/e2e.mjs pins to the literal ['s1'..'s9']. IT IS ALSO ONE OF THE
+	// SEVEN SIX-LANE APPLICATIONS, and this row used to say the opposite: "the
+	// SECOND scenario the angular emitter refuses, on the same global-identifier
+	// ban". Its streamed answer does separate three unrolled chunks with
+	// `new Promise` + `setTimeout`, and that lane genuinely could not NAME a
+	// global inside a transplanted body - but the same T007 that admitted S11
+	// admitted this one, so all SIX CORPUS LANES carry it and
+	// `ANGULAR_UNBUILT_SCENARIOS` is the empty array. See the S11 row above for
+	// the allowlist and for what that lane still refuses.
 	['S12.tsx', 's12-codex-clone.json'],
 	['S13.tsx', 's13-hn-front.json'],
 	// THE FIFTH APPLICATION IN THE CORPUS - the HACKER NEWS ITEM PAGE - and THE

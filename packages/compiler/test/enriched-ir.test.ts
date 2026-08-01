@@ -366,16 +366,28 @@ const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>>
 	// the literal `['s1'..'s9']`, so S11 does NOT join the 6 x 9 three-way
 	// contract either.
 	//
-	// IT IS THE FIRST FIXTURE THAT DOES NOT EMIT IN SIX LANES. The Angular emitter
-	// refuses it - verbatim, read off THIS module and not off a probe: `Angular
-	// emitter cannot resolve the identifier "Promise" in a transplanted body`. The
-	// artificial delay the owner accepted as a stand-in for a real remote is
-	// `new Promise` + `setTimeout`, and Angular resolves every Identifier in a
-	// transplanted body against scope plus declared members. That refusal is
-	// SYNCHRONOUS in origin - `probes/async-door` PC reproduces it with no async
-	// in the module at all - so it is a global-identifier ban and not an async
-	// limit. There is therefore no `generated/S11.ts` in the angular lane, and
-	// that lane's inventory suites subtract this scenario BY NAME.
+	// IT EMITS IN ALL SIX CORPUS LANES, and it is ONE OF THE SEVEN SIX-LANE
+	// APPLICATIONS. This paragraph used to open "IT IS THE FIRST FIXTURE THAT DOES
+	// NOT EMIT IN SIX LANES" and close "There is therefore no `generated/S11.ts` in
+	// the angular lane, and that lane's inventory suites subtract this scenario BY
+	// NAME". Both were true when written and NEITHER IS NOW: measured at HEAD,
+	// packages/frameworks/angular/generated/S11.ts is on disk and
+	// `ANGULAR_UNBUILT_SCENARIOS` in
+	// packages/frameworks/angular/test/unbuilt-scenarios.ts is the EMPTY ARRAY, so
+	// the four inventory suites subtract nothing.
+	//
+	// WHAT THE PARAGRAPH WAS RECORDING IS STILL WORTH KEEPING, because the refusal
+	// was real and its shape is the reason the repair was an allowlist and not an
+	// async fix. The Angular emitter refused this module verbatim - `Angular
+	// emitter cannot resolve the identifier "Promise" in a transplanted body` - and
+	// that refusal was SYNCHRONOUS in origin, reproduced by `probes/async-door` PC
+	// with no async in the module at all, so it was a global-identifier ban and not
+	// an async limit. The artificial delay the owner accepted as a stand-in for a
+	// real remote is `new Promise` + `setTimeout`, and Angular resolves every
+	// Identifier in a transplanted body against scope plus declared members.
+	// `frameless-app-fidelity-v1` T003 ruled a TWO-NAME allowlist and T007 landed
+	// it; every other global is still refused, at `TRANSPLANTED_GLOBALS` in
+	// packages/frameworks/angular/src/emitter/index.ts.
 	//
 	// THREE HOSTS CARRY NO ATTRIBUTE NAME BELOW (`h1`, two `strong`) because they
 	// carry neither a static attribute nor a dynamic binding; the assertion treats
@@ -431,12 +443,16 @@ const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>>
 	// EXACTLY. `scripts/e2e.mjs` still pins `threeWayScenarios` to the literal
 	// `['s1'..'s9']`, so S12 does NOT join the 6 x 9 three-way contract.
 	//
-	// It is the SECOND fixture the Angular emitter refuses, on the same
-	// global-identifier ban and with the same verbatim opening - `Angular emitter
-	// cannot resolve the identifier "Promise" in a transplanted body` - because
-	// the streamed answer's three unrolled chunks are separated by `new Promise` +
-	// `setTimeout`. There is no `generated/S12.ts`, and that lane's four inventory
-	// suites subtract this scenario BY NAME through `test/unbuilt-scenarios.ts`.
+	// IT TOO EMITS IN ALL SIX CORPUS LANES, and it is ONE OF THE SEVEN SIX-LANE
+	// APPLICATIONS. This paragraph used to read "the SECOND fixture the Angular
+	// emitter refuses ... There is no `generated/S12.ts`, and that lane's four
+	// inventory suites subtract this scenario BY NAME", and both halves have been
+	// false since T007: packages/frameworks/angular/generated/S12.ts is on disk and
+	// the subtraction list is empty. The refusal it recorded was real and had the
+	// same verbatim opening as S11's - `Angular emitter cannot resolve the
+	// identifier "Promise" in a transplanted body` - because the streamed answer's
+	// three unrolled chunks are separated by `new Promise` + `setTimeout`; see the
+	// S11 entry above for the allowlist that closed both.
 	//
 	// FOUR TAGS ARRIVE IN THE CORPUS HERE FOR THE FIRST TIME - `aside`, `h2`,
 	// `h3`, `ol` - and one OLD tag arrives in a NEW shape: `textarea` has been in

@@ -193,9 +193,18 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// agreement is how a budget starts describing a claim instead of a measurement.
 	S10: { physicalLoc: 275, structuralNodes: 1262 },
 	// S11 (TodoMVC ADVANCED) IS THE CORPUS'S NEW HEAVYWEIGHT ON BOTH AXES, and it
-	// is the first row in this table with NO ANGULAR TWIN - that lane refuses the
-	// scenario outright on its global-identifier ban, so `S11` exists in five
-	// `generated/` directories and not six.
+	// HAS A TWIN IN EVERY ONE OF THE SIX CORPUS LANES.
+	// THIS ROW USED TO SAY THE OPPOSITE and it was true when it was written: it read
+	// "the first row in this table with NO ANGULAR TWIN - that lane refuses the
+	// scenario outright on its global-identifier ban", which made `S11` a scenario
+	// five lanes emitted and one did not. `frameless-app-fidelity-v1` T003 ruled a
+	// TWO-NAME allowlist - `Promise` and `setTimeout`, nothing else - and T007
+	// landed it. Measured at HEAD rather than inferred: `ANGULAR_UNBUILT_SCENARIOS`
+	// in packages/frameworks/angular/test/unbuilt-scenarios.ts is the empty array,
+	// and packages/frameworks/angular/generated/S11.ts is on disk, so S11 is ONE OF
+	// THE SEVEN SIX-LANE APPLICATIONS. Both of those counts are recompiled from
+	// scripts/demo.mjs at check time by ruling 11 in scripts/check-citations.mjs,
+	// so neither can rot here the way the sentence they replaced did.
 	// Against S10, the previous heaviest: 424/275 = 1.54x the physical lines and
 	// 1891/1262 = 1.50x the structural nodes. The two ratios agreeing to within 3%
 	// is the same reading S10's row made against S7 and it survives one size step
@@ -229,21 +238,25 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// records is still there in the emitter, and a budget cannot see either half.
 	S12: { physicalLoc: 386, structuralNodes: 1760 },
 	// S13 (the HACKER NEWS FRONT PAGE) IS THE CORPUS'S NEW HEAVYWEIGHT ON BOTH
-	// AXES, and it is the FIRST application row in this table that has a twin in
-	// all SIX lanes: S11 and S12 exist in five `generated/` directories, S13 in
-	// six.
+	// AXES, and it is ONE OF THE SEVEN SIX-LANE APPLICATIONS.
 	//
-	// BOTH HALVES OF THAT SENTENCE ARE STALE AND IT IS LEFT STANDING ON PURPOSE,
-	// which is a decision and not an oversight. The position is the same six-lane
-	// chain claim `frameless-app-fidelity-v1` T019 removed from twenty-one other
-	// files - S10 has a twin in all six lanes and always has - and the clause
-	// supporting it belongs to a DIFFERENT family: S11 and S12 now exist in SIX
-	// `generated/` directories, measured, since T007 closed the angular
-	// global-identifier hole. T019 could not correct it here because THE IDENTICAL
-	// SENTENCE SITS IN packages/frameworks/solid/test/size.test.ts, which was
-	// outside that card's scope, and correcting one lane's copy while leaving the
-	// other is the half-close T015 blocked rather than ship. The two must move
-	// together, with the angular-refusal family, in one card.
+	// THIS SENTENCE WAS THE ROOT OF TWO STALE FAMILIES AT ONCE and it was left
+	// standing by `frameless-app-fidelity-v1` T019 on purpose, with its reason in
+	// the file, until one card could take both. It read "the FIRST application row
+	// in this table that has a twin in all SIX lanes: S11 and S12 exist in five
+	// `generated/` directories, S13 in six", and BOTH HALVES WERE FALSE. The
+	// position is the six-lane chain claim T019 removed from twenty-one other files
+	// - S10 has a twin in every lane and always has, so nothing counted from here
+	// was ever right - and the clause supporting it belonged to the angular-refusal
+	// family: T020 measured the directories at HEAD and S11 and S12 are each in
+	// ALL SIX, since T007 closed the angular global-identifier hole. T019 could not
+	// touch it because THE IDENTICAL SENTENCE SAT IN
+	// packages/frameworks/solid/test/size.test.ts, outside that card's scope, and
+	// correcting one lane's copy while leaving the other is the half-close T015
+	// blocked rather than ship. Both moved together, in T020, with the family that
+	// owned the clause - and the count that replaced them is recompiled by ruling
+	// 11 in scripts/check-citations.mjs rather than copied out of a directory
+	// listing by hand.
 	//
 	// Against S11, the previous heaviest: 576/424 = 1.36x the physical lines
 	// and 2106/1891 = 1.11x the structural nodes. THE TWO RATIOS DO NOT AGREE
