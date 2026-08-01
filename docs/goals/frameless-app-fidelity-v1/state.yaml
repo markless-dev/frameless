@@ -7,7 +7,7 @@ goal:
   title: "Frameless app fidelity: make the demos actually work like the things they copy"
   slug: "frameless-app-fidelity-v1"
   kind: recovery
-  status: active
+  status: done
   tranche: >-
     Fix the five defects the owner found driving the qwik lane, close the globals hole that costs
     two apps their sixth lane, and INSTALL THE MISSING ORACLE: compare each app against the thing
@@ -44,7 +44,7 @@ goal:
       FIXING THE FIVE FINDINGS AND LEAVING THE ORACLE HOLE OPEN. The findings are symptoms; the
       cause is that nothing ever compared a shipped app to the thing it copies.
 
-active_task: T022
+active_task: null
 
 # ---------------------------------------------------------------------------
 # OWNER DECISIONS - taken from the owner DIRECTLY on 2026-07-31 while T009 ran.
@@ -2980,7 +2980,7 @@ tasks:
   - id: T022
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       FINAL AUDIT. T013 certified all three oracle parts at HEAD and held the board open on ONE
@@ -3006,4 +3006,60 @@ tasks:
       - "each of the three oracle parts, quoted verbatim, certified or refused"
       - "your ruling on the record ground, and on gate.test.ts:50 and THIRTY-ONE"
       - "next task if not complete"
-    receipt: null
+    receipt:
+      result: done
+      harness: claude-code
+      decision: complete
+      full_outcome_complete: true
+      verification_attempts: 1
+      rationale: "ALL THREE ORACLE PARTS CERTIFY AT HEAD, RE-RUN NOT INHERITED. Nine commits since 833f74f: comments stripped from every changed file and ONLY scripts/check-citations.mjs and citations.test.ts carry NON-COMMENT change - the guard OD3 ordered. NO fixture, golden, generated/ or emitted byte moved, so parts 1 and 2 TRANSFER BY PROOF. The Judge MUTATED RULING 11 ITSELF: check:citations still exits 0 printing 'agreed with the prose' while the suite goes 29 RED. THIRTY-ONE IS TRUE AND DERIVABLE - 19 static anchors + 2x12 stories = 43, minus 12 real = 31. The record ground is closed AS THE OWNER RULED IT: part 3's prose instrument, not sweep convergence."
+      THE_BRIEFS_ERROR_WAS_THE_CONSEQUENTIAL_ONE: "THE PM CALLED 'THIRTY-ONE' THE HIGHEST-YIELD SUCCESSOR TARGET. IT IS TRUE. Acting on it would have opened packages/compiler/test/fixtures/s13-hn-front.tsrx - THE SINGLE MOST HAZARDOUS EDIT ON THIS BOARD, since the golden stores ABSOLUTE CHARACTER OFFSETS and regenerate DOES NOT WRITE GOLDENS - TO 'FIX' A CORRECT NUMBER. T021 could not derive it because IT USED THE WRONG UNIT: it counted 26 onTrace sites and 27 handler attributes IN THE FIXTURE SOURCE, a PER-SOURCE-SITE count, while THIRTY-ONE IS A PER-RENDERED-ANCHOR COUNT and the repeat body's 2 anchors render TWELVE TIMES EACH. PM INDEPENDENTLY DERIVED IT: before=10, inside=2, after=9 in svelte/generated/S13.svelte, 12 seeded stories, 10 + 2x12 + 9 = 43 RENDERED ANCHORS, minus 12 real titles = 31. EXACT."
+      AND_IT_CORRECTED_THE_BOARDS_OWN_CHARACTERISATION_TWICE: "(1) gate.test.ts:42-51 CARRIES NO DATE. T021 and the PM's brief BOTH called it an 'explicitly dated past-tense paragraph'; its only temporal anchor is the EVENT 'until S4 landed'. It qualifies for NEITHER standing exemption and IS a stale live-reading clause - it simply does not block, because no oracle part reaches it. (2) THE STRUCTURAL GAP IS NOT 'two of six lanes are unguardable': 99 tracked files (58 .svelte, 41 .vue) are structurally invisible to check:citations, WHILE THE SVELTE AND VUE LANES ARE PARTLY GUARDED - 48 of their .ts/.mjs files are among the 610 swept. THE UNGUARDABLE UNIT IS THE FILE TYPE, NOT THE LANE."
+      commands:
+        - cmd: "COMMIT COUNT MEASURED, NOT TRUSTED"
+          status: pass
+          note: "git rev-list --count 833f74f..HEAD = 9. The PM's dispatch deliberately gave NO number this time"
+        - cmd: "TRANSFER PROVEN MECHANICALLY, NOT BY READING DIFFS"
+          status: pass
+          note: "For all 32 changed JS-family files, code-only text computed BY INVERTING THE GUARD'S OWN commentsOnly LEXER and diffed 833f74f vs HEAD. 30 OF 32 ARE COMMENT-ONLY. Only check-citations.mjs (688->1002 code lines) and citations.test.ts (432->993) changed code. A second stripper for <!--/--> and /* */ found all 6 .svelte routes, App.vue and all 7 codex.css copies comment-only too. NO .tsrx FIXTURE, GOLDEN, generated/ OR src/emitted/ FILE APPEARS IN THE 9-COMMIT DIFF AT ALL - THE .tsrx OFFSET HAZARD CANNOT HAVE FIRED"
+        - cmd: "ORACLE PART 1 quoted VERBATIM and ruled"
+          status: pass
+          note: "CERTIFIED. Eight applications ship. SEVEN carry a driven rendered capture - S10/S14 (T008, re-run at ORIGIN by T009), S11 (T007), S13 at 1440x1000 (T001), S15 and S17 (T005), S16 square-ui-task-management (T004). S12 EXEMPT BY NAME under OD1. NO FIDELITY CLAIM RESTS ON CROSS-LANE AGREEMENT"
+        - cmd: "ORACLE PART 2 quoted VERBATIM and ruled"
+          status: pass
+          note: "CERTIFIED, all five named individually. (1) HN layout: y-extent overlap OFF THE RENDERED IMAGE in six lanes with a negative control that FAILS. (2) Links: comments link lands on /hn-item in four lanes BY BODY HASH, 17 stubs LABELLED ON THE PAGE; per-item disclosure REFUSED because the reference has ZERO collapse toggles on its front page. (3) Drag: real HTML5 drag in five lanes, react inert and labelled. (4) Habits 0 -> 12 observables in six lanes. (5) Contacts first field y=935 -> y=336, 1 -> 11 of 13 control kinds, plus OD2's placeholder at two viewports"
+        - cmd: "ORACLE PART 3 quoted VERBATIM and RE-RUN BY THIS JUDGE at 6572cdc"
+          status: pass
+          note: "CERTIFIED. pnpm test 1 failed / 1473 passed / 65 files, the foreign ARM B; pnpm e2e RUN ALONE PASS 6 x 9; pnpm lint 0/0 over 558; check:citations clean over 4 documents / 17 watched source / 610 swept; pnpm check 261"
+        - cmd: "CHECK BUDGET LEDGER - the final_proof's 'start and end values with every rise attributed'"
+          status: pass
+          note: "START 251 -> END 261. EXACTLY ONE RISE: T004's drag, +13 predicted and +16 bounded IN ADVANCE, ACTUAL +10, attributed line by line (react 108->113, solid 73->78, qwik 70->70). Every card since reports 261 -> 261. THE 267 CEILING WAS NEVER REACHED"
+        - cmd: "GUARD PROVEN REAL BY THE JUDGE'S OWN MUTATION, INHERITED FROM NOBODY, WITHOUT WRITING TO THE REPO"
+          status: pass
+          note: "Symlink FAKEROOT in the scratchpad whose `..` resolves to a repo mirror; a PRISTINE copy run from it reproduced the real output EXACTLY. Neutered scanCountedSubjects to return [] (e627255c -> d3d56dfe): check-citations STILL EXITS 0 and STILL PRINTS 'agreed with the prose in 15 file(s)' - IT CERTIFIES THE ROT - while the suite goes 29 FAILED / 88 passed. CONTROL at the byte-identical pristine copy: 117 PASSED"
+        - cmd: "GUARD LIMIT VERIFIED AND REFINED"
+          status: pass
+          note: "SWEPT_SOURCE_EXTENSIONS is /\\.(?:ts|tsx|js|jsx|mjs|cjs)$/, so of the 610 swept files 0 are .svelte and 0 are .vue - measured by CALLING sweptSourceFiles() DIRECTLY. Census: ts 340, tsx 182, mjs 42, jsx 25, js 20, cjs 1"
+        - cmd: "DERIVATION PROOF after e2e re-ran all six regenerate and six copy-emitted steps"
+          status: pass
+          note: "24 EXPLICIT paths, NO WILDCARD PATHSPEC, each asserted to exist and be non-empty via git ls-files FIRST. All 24 present, git diff --exit-code CLEAN. ANGULAR/generated AND angular/src/emitted ARE BOTH 17 - THE SIXTH LANE THIS BOARD BOUGHT IS ON DISK"
+        - cmd: "PM INDEPENDENT RE-DERIVATION OF THIRTY-ONE"
+          status: pass
+          note: "svelte/generated/S13.svelte: 10 anchors before the each-block at :114, 2 inside, 9 after :186; fixture seeds 12 stories. 10 + 2x12 + 9 = 43 RENDERED ANCHORS; minus 12 real titles = 31. THE JUDGE'S DERIVATION IS EXACT"
+        - cmd: "READ-ONLY CONFIRMED"
+          status: pass
+          note: "Owner fingerprints f326d314 / aeb7edc1 / f936e169 over 116 files IDENTICAL at both ends; git status --short exactly the owner's three dirty paths at both ends; HEAD unchanged at 6572cdc. Nothing staged, no git add, NO pkill of any form, no port held after e2e. No report .md written - the harness forbids it, so THE RECEIPT IS THE RULING, as seven agents before it recorded"
+      rulings:
+        record_ground: "CLOSED, WITH RECORDED GAPS. THE PM'S BRIEF PREMISE IS FALSE: 'the oracle's three parts say nothing about prose' DOES NOT SURVIVE THE VERBATIM TEXT. PART 3 NAMES check:citations, AND check:citations IS A PROSE INSTRUMENT - it sweeps comments in 610 source files and 4 watched documents and, since T017-T020, RECOMPILES FIVE SUBJECTS FROM REAL TABLES. So the oracle DOES bind prose, BUT ONLY THROUGH THAT INSTRUMENT. It nowhere requires prose-wide accuracy and NOWHERE REQUIRES A SWEEP TO CONVERGE. OD3 deliberately moved the record debt OUT of unbounded hand-sweeping and INTO part 3's named gate. That gate exists, recompiles five subjects, and its red-capability was proven by this Judge. THE RECORD GROUND IS DISCHARGED AS THE OWNER RULED IT. T021's non-convergence finding is REAL and is A RECORDED GAP, NOT A BLOCKER: holding the board open on it would CONTRADICT OD3, would be UNBOUNDED by T015's own measurement, and would be the THIRTEENTH TURN OF A LOOP THE OWNER ALREADY CLOSED."
+        gate_test_ts_50: "STALE, NON-BLOCKING, DELIBERATELY NOT A CARD - AND THE BOARD'S OWN CHARACTERISATION IS WRONG. The paragraph at :42-51 CARRIES NO DATE; its only temporal anchor is the EVENT 'until S4 landed'. It qualifies for NEITHER standing exemption, and 'four more scenarios are queued' DOES read as a live claim and IS false. IT STILL DOES NOT BLOCK: it carries no file:line ordinal so it is not a citation, and 'scenarios' is not one of ruling 11's five recompiled subjects, so part 3's only prose instrument is unaffected and stays clean. The sentence it supports IS STILL TRUE. Correcting it is a two-word tense change to an UNRECOMPILABLE count - exactly the work OD3 ruled against doing by hand. RECORDED GAP."
+        thirty_one: "TRUE, DERIVABLE, AND NOT A DEFECT. See THE_BRIEFS_ERROR_WAS_THE_CONSEQUENTIAL_ONE. Reconciles a second way against T002's SSR census: 17 destination-less + 2 -> /hn (logo, wordmark) + 12 -> /hn-item = 31. NO CARD, AND NO CARD MAY OPEN s13-hn-front.tsrx FOR IT."
+      worker_package: null
+      blocked_tasks: []
+      missing_evidence:
+        - "THE JUDGE DID NOT PUT A MOUSE ON SIX LANES AND WILL NOT PRETEND OTHERWISE. Oracle parts 1 and 2 are certified BY PROVEN TRANSFER from T013's certification at 833f74f, not by re-measurement - it proved MECHANICALLY that no non-comment byte moved in any app, host, emitter, fixture, golden, generated or emitted artifact across the nine intervening commits. THAT IS A TRANSFER PROOF, NOT A FRESH DRIVE."
+        - "OD1's S12 EXEMPTION IS CONDITIONAL BY THE OWNER'S OWN WORDS. The PM never proved the login wall; unauthenticated curl returned 403, WHICH IS BOT-BLOCKING. The Judge did not probe the live Codex UI DELIBERATELY: a 403 or a marketing body would be evidence of NEITHER state. OD1 REOPENS PART 1 FOR S12 AUTOMATICALLY if any later card reaches that UI unauthenticated. THAT CONDITION STANDS."
+        - "THE DRAG REMAINS A CHROMIUM-ONLY CLAIM IN ALL SIX LANES. Firefox unmeasured across FIVE cards now."
+        - "The qwik lost drop (1 of 16, first from a fresh page) is reproduced by three cards and unresolved. Inside qwik's OWN resumability envelope - NOTHING FILED UPSTREAM."
+        - "check-citations.mjs still does not verify that a cited path SUPPORTS its claim, and the Judge measured A SHARPER FORM at :829-831: resolvesInRepo uses existsSync ONLY TO CLASSIFY, so A CITATION TO A NON-EXISTENT PATH IS SILENTLY RULED NOT-FIRST-PARTY AND ESCAPES EVERY RULING. Unowned since T013."
+        - "codex.css:60's 43/13/4 divergence counts describe the FIVE lanes that served /codex when they were taken and have NEVER been re-run over six. T014 recorded this deliberately RATHER THAN INFLATING THE NUMBER."
+      stopped_because: null
